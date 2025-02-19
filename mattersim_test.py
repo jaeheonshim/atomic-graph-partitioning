@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from partitioner import part_graph_extended
 import networkx as nx
-from ase.io import read
+from ase.io import read, write
 from ase.build import make_supercell
 from mattersim.datasets.utils.convertor import GraphConvertor
 from torch_geometric.utils import to_networkx
@@ -164,21 +164,23 @@ def test_partitioning_supercell(supercell_scaling, desired_partitions = 20, neig
     partitioned_atoms = []
     indices_map = [] # Table mapping each atom in each partition back to its index in the original atoms object
 
-    for part in extended_partitions:
+    for i, part in enumerate(extended_partitions):
         current_partition = []
         current_indices_map = []
         for atom_index in part:
             current_partition.append(atoms[atom_index])
             current_indices_map.append(atoms[atom_index].index)
 
-        atoms = Atoms(current_partition, cell=atoms.cell, pbc=atoms.pbc)
-        scaled_pos = atoms.get_scaled_positions()
+        part_atoms = Atoms(current_partition, cell=np.array([[50, 0, 0], [0, 50, 0], [0, 0, 50]]), pbc=True)
+        scaled_pos = part_atoms.get_scaled_positions()
         scaled_pos_center = np.mean(scaled_pos, axis=0)
         scaled_pos_offset = scaled_pos_center - 0.5
         scaled_pos = np.mod(scaled_pos - scaled_pos_offset, 1)
-        atoms.set_scaled_positions(scaled_pos)
+        part_atoms.set_scaled_positions(scaled_pos)
+
+        write(f"part-{i}.xyz", part_atoms)
         
-        partitioned_atoms.append(atoms)
+        partitioned_atoms.append(part_atoms)
         indices_map.append(current_indices_map)
 
     ## Inference
@@ -252,12 +254,9 @@ def test_partitioning_supercell(supercell_scaling, desired_partitions = 20, neig
     }
 
 results = []
-for x in range(1, 7):
-    for yz in range(x, x + 2):
-        for i in range(3):
-            results.append(test_partitioning_supercell([[x, 0, 0], [0, yz, 0], [0, 0, yz]]))
+results.append(test_partitioning_supercell([[1, 0, 0], [0, 1, 0], [0, 0, 1]]))
 
-with open('mattersim_test_results.csv', 'w') as csvfile:
+with open('mattersim_test_50k.csv', 'w') as csvfile:
     writer = csv.DictWriter(csvfile, results[0].keys())
     writer.writeheader()
     writer.writerows(results)
