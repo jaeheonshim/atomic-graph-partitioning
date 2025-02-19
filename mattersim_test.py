@@ -245,7 +245,7 @@ def test_partitioning_supercell(supercell_scaling, desired_partitions = 20, neig
     }
 
 results = []
-for x in range(1, 2):
+for x in range(1, 7):
     for yz in range(x, x + 2):
         for i in range(3):
             results.append(test_partitioning_supercell([[x, 0, 0], [0, yz, 0], [0, 0, yz]]))

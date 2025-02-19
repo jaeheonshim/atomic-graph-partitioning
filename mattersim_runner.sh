@@ -5,4 +5,4 @@
 #SBATCH -q inferno
 #SBATCH --mem-per-gpu=80G
 
-papermill mattersim_runner.ipynb mattersim_runner.out.ipynb
+python mattersim_test.py
