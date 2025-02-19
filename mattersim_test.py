@@ -171,7 +171,14 @@ def test_partitioning_supercell(supercell_scaling, desired_partitions = 20, neig
             current_partition.append(atoms[atom_index])
             current_indices_map.append(atoms[atom_index].index)
 
-        partitioned_atoms.append(Atoms(current_partition, cell=atoms.cell, pbc=atoms.pbc)) # It's important to pass atoms.cell and atoms.pbc here
+        atoms = Atoms(current_partition, cell=atoms.cell, pbc=atoms.pbc)
+        scaled_pos = atoms.get_scaled_positions()
+        scaled_pos_center = np.mean(scaled_pos, axis=0)
+        scaled_pos_offset = scaled_pos_center - 0.5
+        scaled_pos = np.mod(scaled_pos - scaled_pos_offset, 1)
+        atoms.set_scaled_positions(scaled_pos)
+        
+        partitioned_atoms.append(atoms)
         indices_map.append(current_indices_map)
 
     ## Inference
