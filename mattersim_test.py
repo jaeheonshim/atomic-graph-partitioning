@@ -14,6 +14,8 @@ from torch_runstats.scatter import scatter
 from mattersim.utils.download_utils import download_checkpoint
 from mattersim.forcefield.potential import Potential
 from mattersim.datasets.utils.build import build_dataloader
+import csv
+import time
 
 class M3GnetModified(M3Gnet):
     def forward(
@@ -182,7 +184,10 @@ def test_partitioning_supercell(supercell_scaling, desired_partitions = 20, neig
 
     dataloader = DataLoader([converter.convert(part.copy(), None, None, None) for part in partitioned_atoms])
 
+    partition_inference_times = []
+
     for part_idx, input_graph in tqdm(enumerate(dataloader), total=num_partitions):
+        t0 = time.time()
         input_graph = input_graph.to(device)
         input_dict = batch_to_dict(input_graph)
         atomic_numbers = input_dict["atom_attr"]
@@ -197,6 +202,10 @@ def test_partitioning_supercell(supercell_scaling, desired_partitions = 20, neig
                 aggregated_features[original_index] = feat[j]
                 aggregated_atomic_numbers[original_index] = atomic_numbers[j]
 
+        t1 = time.time()
+
+        partition_inference_times.append(t1 - t0)
+
         del input_graph, input_dict, atomic_numbers, feat
         torch.cuda.empty_cache()
 
@@ -208,24 +217,40 @@ def test_partitioning_supercell(supercell_scaling, desired_partitions = 20, neig
     energy = scatter(energy, batch, dim=0, dim_size=1)
 
     ## Benchmark Inference
+    torch.cuda.empty_cache()
+
+    t0 = time.time()
     potential = Potential.from_checkpoint(device=device)
     dataloader = build_dataloader([atoms], only_inference=True)
 
-    torch.cuda.empty_cache()
     with torch.no_grad():
         predictions = potential.predict_properties(dataloader, include_forces=False, include_stresses=False)
         benchmark_energy = predictions[0][0]
 
     energy_error_abs = torch.abs(benchmark_energy - energy).item()
     energy_error_pct = torch.abs((benchmark_energy - energy) / benchmark_energy).item() * 100
+    t1 = time.time()
+
+    benchmark_time = t1 - t0
 
     return {
         "num_atoms": len(atoms),
         "avg_partition_size": sum(len(x) for x in extended_partitions) / num_partitions,
-        "partition_energy": energy,
+        "partition_energy": energy.item(),
         "benchmark_energy": benchmark_energy,
         "energy_error_abs": energy_error_abs,
-        "energy_error_pct": energy_error_pct
+        "energy_error_pct": energy_error_pct,
+        "avg_partition_time": sum(partition_inference_times) / len(partition_inference_times),
+        "benchmark_time": benchmark_time
     }
 
-print(test_partitioning_supercell([[1, 0, 0], [0, 1, 0], [0, 0, 1]]))
+results = []
+for x in range(1, 2):
+    for yz in range(x, x + 2):
+        for i in range(3):
+            results.append(test_partitioning_supercell([[x, 0, 0], [0, yz, 0], [0, 0, yz]]))
+
+with open('mattersim_test_results.csv', 'w') as csvfile:
+    writer = csv.DictWriter(csvfile, results[0].keys())
+    writer.writeheader()
+    writer.writerows(results)
