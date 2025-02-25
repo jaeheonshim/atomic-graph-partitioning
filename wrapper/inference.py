@@ -40,7 +40,8 @@ class AtomicPartitionInference:
         for i, part in tqdm(enumerate(partitioned_atoms), total=num_partitions):
             input_graph = self.model_adapter.atoms_to_graph(part)
 
-            part_embeddings = self.model_adapter.forward_graph(input_graph)
+            with torch.no_grad():
+                part_embeddings = self.model_adapter.forward_graph(input_graph)
 
             for j, node in enumerate(part):
                 original_index = indices_map[i][j]
@@ -48,7 +49,8 @@ class AtomicPartitionInference:
                     all_embeddings[original_index] = part_embeddings[j]
 
         ### Extract Energy
-        energy = self.model_adapter.forward_energy(all_embeddings, atoms)
+        with torch.no_grad():
+            energy = self.model_adapter.forward_energy(all_embeddings, atoms)
 
         return {
             "energy": energy
@@ -58,8 +60,9 @@ from ase.io import read
 from ase.build import make_supercell
 from orb_models.forcefield.base import AtomGraphs
 from implementations.orb import OrbModelAdapter
+from implementations.mattersim import MatterSimModelAdapter
 
-orb_adapter = OrbModelAdapter()
+orb_adapter = MatterSimModelAdapter()
 inference = AtomicPartitionInference(orb_adapter)
 
 atoms = read("datasets/test.xyz")
