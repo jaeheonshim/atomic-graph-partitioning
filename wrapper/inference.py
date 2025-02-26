@@ -47,7 +47,7 @@ class AtomicPartitionInference:
         ### Graph Regressor
         all_embeddings = torch.zeros((len(atoms), self.model_adapter.embedding_size), dtype=torch.float32, device=self.model_adapter.device)
 
-        for i in range(0, len(partitioned_atoms), parts_per_batch):
+        for i in tqdm(range(0, len(partitioned_atoms), parts_per_batch)):
             parts = partitioned_atoms[i:i+parts_per_batch]
             input_graph = [self.model_adapter.atoms_to_graph(part) for part in parts]
 
