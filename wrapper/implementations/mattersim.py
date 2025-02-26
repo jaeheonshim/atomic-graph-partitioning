@@ -42,8 +42,14 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
         for i, graph in enumerate(graphs):
             part_index = part_indices[i]
 
-            for j in range(0, len(self.partitions[part_index])):
-                graph.atom_pos[j] = self.global_atom_pos[self.partitions[part_index][j]]
+            partition_indices = torch.tensor(
+                self.partitions[part_index],
+                device=self.device,
+                dtype=torch.long,
+            )
+
+            new_atom_pos = self.global_atom_pos[partition_indices]
+            graph.atom_pos = new_atom_pos
 
         embeddings = []
         for input_graph in dataloader:
