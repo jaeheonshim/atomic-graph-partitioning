@@ -43,8 +43,7 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
             part_index = part_indices[i]
 
             for j in range(0, len(self.partitions[part_index])):
-                if self.roots[part_index][j]:
-                    graph.atom_pos[j] = self.global_atom_pos[self.partitions[part_index][j]]
+                graph.atom_pos[j] = self.global_atom_pos[self.partitions[part_index][j]]
 
         embeddings = []
         for input_graph in dataloader:
