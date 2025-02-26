@@ -17,7 +17,7 @@ import csv
 device = 'cuda'
 
 ATOMS_FILE = "datasets/H2O.xyz"
-MAX_SUPERCELL_DIM = 1
+MAX_SUPERCELL_DIM = 2
 NUM_PARTITIONS = 10
 
 MATTERSIM_ITERATIONS = 5 # Mattersim is a little weird so I will run multiple times and average
@@ -85,8 +85,8 @@ def run_mattersim_error_test(supercell_scaling):
         benchmark_energy.append(benchmark["energy"])
         benchmark_forces.append(benchmark["forces"])
 
-    benchmark_energy = torch.mean(torch.tensor(benchmark_energy))
-    benchmark_forces = torch.mean(torch.tensor(np.array(benchmark_forces)), dim=0)
+    benchmark_energy = np.mean(benchmark_energy)
+    benchmark_forces = np.mean(benchmark_forces, axis=0)
 
     for mp in mp_list:
         mattersim_partition_inference.model_adapter.num_message_passing = mp
@@ -95,22 +95,22 @@ def run_mattersim_error_test(supercell_scaling):
         result_forces = []
         for _ in range(MATTERSIM_ITERATIONS):
             result = mattersim_partition_inference.run(atoms, desired_partitions=NUM_PARTITIONS)
-            result_energy.append(result["energy"])
-            result_forces.append(result["forces"])
+            result_energy.append(result["energy"].detach().cpu())
+            result_forces.append(np.array(result["forces"].detach().cpu()))
 
-        result_energy = torch.mean(torch.tensor(result_energy))
-        result_forces = torch.mean(torch.tensor(np.array(result_forces)), dim=0)
+        result_energy = np.mean(result_energy)
+        result_forces = np.mean(result_forces, axis=0)
         
         mattersim_rows.append([
             len(atoms),
             mp,
-            abs(benchmark["energy"] - result["energy"]).item(),
-            abs((benchmark["energy"] - result["energy"]) / benchmark["energy"]).item(),
-            torch.max(torch.abs(benchmark["forces"] - result["forces"])).item(),
-            torch.mean(torch.abs(benchmark["forces"] - result["forces"])).item(),
-            torch.mean(torch.abs((benchmark["forces"] - result["forces"]) / benchmark["forces"])).item(),
-            torch.mean(torch.pow(benchmark["forces"] - result["forces"], 2)).item(),
-            torch.sqrt(torch.mean(torch.pow(benchmark["forces"] - result["forces"], 2))).item(),
+            abs(benchmark_energy - result_energy).item(),
+            abs((benchmark_energy - result_energy) / benchmark_energy).item(),
+            np.max(np.abs(benchmark_forces - result_forces)).item(),
+            np.mean(np.abs(benchmark_forces - result_forces)).item(),
+            np.mean(np.abs((benchmark_forces - result_forces) / benchmark_forces)).item(),
+            np.mean((benchmark_forces - result_forces) ** 2).item(),
+            np.sqrt(np.mean((benchmark_forces - result_forces) ** 2)).item(),
         ])
 
 def write_csv():
