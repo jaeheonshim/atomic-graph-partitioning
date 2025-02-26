@@ -20,14 +20,14 @@ ATOMS_FILE = "datasets/H2O.xyz"
 MAX_SUPERCELL_DIM = 2
 NUM_PARTITIONS = 10
 
-MATTERSIM_ITERATIONS = 10 # Mattersim is a little weird so I will run multiple times and average
+MATTERSIM_ITERATIONS = 5 # Mattersim is a little weird so I will run multiple times and average
 
 orbff = pretrained.orb_v2(device=device)
 
-orb_partition_inference = AtomicPartitionInference(OrbModelAdapter(device=device, num_message_passing=3))
+orb_partition_inference = AtomicPartitionInference(OrbModelAdapter(device=device, num_message_passing=3)),
 mattersim_partition_inference = AtomicPartitionInference(MatterSimModelAdapter(device=device, num_message_passing=3))
 
-mp_list = [4]
+mp_list = [3,4,5]
 
 fields = ['num_atoms', 'mp', 'energy_error_abs', 'energy_error_pct', 'forces_error_max', 'forces_error_mae', 'forces_error_mape', 'forces_error_mse', 'forces_error_rms']
 orb_rows = []
@@ -65,10 +65,10 @@ def run_orb_error_test(supercell_scaling):
             len(atoms),
             mp,
             abs(benchmark["energy"] - result["energy"]).item(),
-            abs((benchmark["energy"] - result["energy"]) / benchmark["energy"]).item() * 100,
+            abs((benchmark["energy"] - result["energy"]) / benchmark["energy"]).item(),
             torch.max(torch.abs(benchmark["forces"] - result["forces"])).item(),
             torch.mean(torch.abs(benchmark["forces"] - result["forces"])).item(),
-            torch.mean(torch.abs((benchmark["forces"] - result["forces"]) / benchmark["forces"])).item() * 100,
+            torch.mean(torch.abs((benchmark["forces"] - result["forces"]) / benchmark["forces"])).item(),
             torch.mean(torch.pow(benchmark["forces"] - result["forces"], 2)).item(),
             torch.sqrt(torch.mean(torch.pow(benchmark["forces"] - result["forces"], 2))).item(),
         ])
@@ -105,10 +105,10 @@ def run_mattersim_error_test(supercell_scaling):
             len(atoms),
             mp,
             abs(benchmark_energy - result_energy).item(),
-            abs((benchmark_energy - result_energy) / benchmark_energy).item() * 100,
+            abs((benchmark_energy - result_energy) / benchmark_energy).item(),
             np.max(np.abs(benchmark_forces - result_forces)).item(),
             np.mean(np.abs(benchmark_forces - result_forces)).item(),
-            np.mean(np.abs((benchmark_forces - result_forces) / benchmark_forces)).item() * 100,
+            np.mean(np.abs((benchmark_forces - result_forces) / benchmark_forces)).item(),
             np.mean((benchmark_forces - result_forces) ** 2).item(),
             np.sqrt(np.mean((benchmark_forces - result_forces) ** 2)).item(),
         ])
@@ -125,7 +125,5 @@ def write_csv():
         writer.writerows(mattersim_rows)
         
 for x in range(1, MAX_SUPERCELL_DIM):
-    for y in range(x, x + 2):
-        run_orb_error_test(((x, 0, 0), (0, y, 0), (0, 0, y)))
-        # run_mattersim_error_test(((x, 0, 0), (0, y, 0), (0, 0, y)))
-        write_csv()
+    run_mattersim_error_test(((x, 0, 0), (0, x, 0), (0, 0, x)))
+    write_csv()

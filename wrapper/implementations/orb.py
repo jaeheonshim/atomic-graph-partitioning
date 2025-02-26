@@ -28,7 +28,7 @@ class OrbModelAdapter(AtomicModelAdapter[AtomGraphs]):
         ref = REFERENCE_ENERGIES["vasp-shifted"]
         self.reference = LinearReferenceEnergy(
             weight_init=ref.coefficients, trainable=True
-        )
+        ).to(self.device)
 
         base = get_base()
 
