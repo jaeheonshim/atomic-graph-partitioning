@@ -74,7 +74,7 @@ from orb_models.forcefield.base import AtomGraphs
 from implementations.orb import OrbModelAdapter
 from implementations.mattersim import MatterSimModelAdapter
 
-orb_adapter = OrbModelAdapter()
+orb_adapter = MatterSimModelAdapter()
 inference = AtomicPartitionInference(orb_adapter)
 
 atoms = read("datasets/H2O.xyz")

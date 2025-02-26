@@ -15,7 +15,7 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
     def __init__(self, *args, **kwargs):
         super().__init__(
             embedding_size=128,
-            num_message_passing=5
+            num_message_passing=5,
             *args, **kwargs
         )
 
@@ -45,11 +45,14 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
             root_atom_indices = self.partitions[part_index][self.roots[part_index]]
             graph.atom_pos[self.roots[part_index]] = self.global_atom_pos[root_atom_indices]
 
-        input_graph = next(iter(dataloader))
-        input_graph = input_graph.to(self.device)
-        input_dict = batch_to_dict(input_graph)
+        embeddings = []
+        for input_graph in dataloader:
+            input_graph = input_graph.to(self.device)
+            input_dict = batch_to_dict(input_graph)
 
-        return self.model.forward(input_dict)
+            embeddings.append(self.model.forward(input_dict))
+
+        return embeddings
     
     def predict_energy(self, embeddings, atoms):
         atomic_numbers = torch.tensor(atoms.get_atomic_numbers()).long()
