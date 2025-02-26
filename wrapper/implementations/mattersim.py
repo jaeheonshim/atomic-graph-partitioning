@@ -1,5 +1,7 @@
 from adapter import AtomicModelAdapter
 
+from typing import Dict, List, Optional, Tuple
+
 import torch
 
 from torch_geometric.data import Data
@@ -24,9 +26,20 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
 
     def graph_to_networkx(self, graph):
         return to_networkx(graph)
+    
+    def set_partition_info(self, all_atoms, partitions, roots):
+        super().set_partition_info(all_atoms, partitions, roots)
 
-    def forward_graph(self, graph):
+        # Need to store all global_atom_pos in one place so that we can use them for grad calculation for forces later
+        self.global_atom_pos = torch.tensor(all_atoms.positions, device=self.device, dtype=torch.float)
+        self.global_atom_pos.requires_grad_(True)
+
+    def forward_graph(self, graph, part_index):
         dataloader = DataLoader([graph])
+
+        root_atom_indices = self.partitions[part_index][self.roots[part_index]]
+
+        graph.atom_pos[self.roots[part_index]] = self.global_atom_pos[root_atom_indices]
 
         input_graph = next(iter(dataloader))
         input_graph = input_graph.to(self.device)
@@ -34,7 +47,7 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
 
         return self.model.forward(input_dict)
     
-    def forward_energy(self, embeddings, atoms):
+    def predict_energy(self, embeddings, atoms):
         atomic_numbers = torch.tensor(atoms.get_atomic_numbers()).long()
         batch = torch.zeros((len(atoms)), dtype=torch.int64, device=self.device)
 
@@ -42,7 +55,32 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
         energy = self.model.normalizer(energy, atomic_numbers)
         energy = scatter(energy, batch, dim=0, dim_size=1)
 
+        self.energy = energy
+
         return energy
+    
+    def predict_forces(self, embeddings, atoms):
+        grad_outputs: List[Optional[torch.Tensor]] = [
+            torch.ones_like(
+                self.energy,
+            )
+        ]
+        grad = torch.autograd.grad(
+            outputs=[
+                self.energy,
+            ],
+            inputs=[self.global_atom_pos],
+            grad_outputs=grad_outputs,
+            create_graph=False,
+        )
+
+        # Dump out gradient for forces
+        force_grad = grad[0]
+        if force_grad is not None:
+            forces = torch.neg(force_grad)
+            
+            return forces
+
 
 ### Patched implementations of MatterSim classes
 

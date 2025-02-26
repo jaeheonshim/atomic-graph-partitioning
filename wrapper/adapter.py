@@ -23,11 +23,22 @@ class AtomicModelAdapter(Generic[GraphType]):
         """
         ...
 
-    def forward_graph(self, graph: GraphType) -> torch.Tensor:
+    def set_partition_info(self, all_atoms: ase.Atoms, partitions: torch.Tensor, roots: torch.Tensor):
+        """
+        Store information about the partition configuration so that it can be used in other methods
+        """
+        self.all_atoms = all_atoms
+        self.partitions = partitions
+        self.roots = roots
+
+    def forward_graph(self, graph: GraphType, part_index: int) -> torch.Tensor:
         """
         Model specific graph through graph regressor for embeddigs
         """
         ...
     
-    def forward_energy(self, embeddings: torch.Tensor, atoms: ase.Atoms) -> torch.Tensor:
+    def predict_energy(self, embeddings: torch.Tensor, atoms: ase.Atoms) -> torch.Tensor:
+        ...
+
+    def predict_forces(self, embeddings: torch.Tensor, atoms: ase.Atoms) -> torch.Tensor:
         ...

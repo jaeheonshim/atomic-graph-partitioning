@@ -81,7 +81,7 @@ class OrbModelAdapter(AtomicModelAdapter[AtomGraphs]):
         batch = self.orbff.model(graph)
         return batch.node_features["feat"] 
     
-    def forward_energy(self, embeddings, atoms):
+    def predict_energy(self, embeddings, atoms):
         n_node = torch.tensor([embeddings.shape[0]])
 
         input = segment_ops.aggregate_nodes(
