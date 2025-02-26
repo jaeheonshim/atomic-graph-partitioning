@@ -14,29 +14,20 @@ import numpy as np
 
 import csv
 
-device = 'cpu'
+device = 'cuda'
 
 ATOMS_FILE = "datasets/H2O.xyz"
-MAX_SUPERCELL_DIM = 6
+MAX_SUPERCELL_DIM = 1
 NUM_PARTITIONS = 10
 
 MATTERSIM_ITERATIONS = 5 # Mattersim is a little weird so I will run multiple times and average
 
 orbff = pretrained.orb_v2(device=device)
 
-orb_part_inference = [
-    AtomicPartitionInference(OrbModelAdapter(device=device, num_message_passing=3)),
-    AtomicPartitionInference(OrbModelAdapter(device=device, num_message_passing=4)),
-    AtomicPartitionInference(OrbModelAdapter(device=device, num_message_passing=5)),
-    AtomicPartitionInference(OrbModelAdapter(device=device, num_message_passing=6))
-]
+orb_partition_inference = AtomicPartitionInference(OrbModelAdapter(device=device, num_message_passing=3)),
+mattersim_partition_inference = AtomicPartitionInference(MatterSimModelAdapter(device=device, num_message_passing=3))
 
-mattersim_part_inference = [
-    AtomicPartitionInference(MatterSimModelAdapter(device=device, num_message_passing=3)),
-    AtomicPartitionInference(MatterSimModelAdapter(device=device, num_message_passing=4)),
-    AtomicPartitionInference(MatterSimModelAdapter(device=device, num_message_passing=5)),
-    AtomicPartitionInference(MatterSimModelAdapter(device=device, num_message_passing=6))
-]
+mp_list = [3,4,5,6]
 
 fields = ['num_atoms', 'mp', 'energy_error_abs', 'energy_error_pct', 'forces_error_max', 'forces_error_mae', 'forces_error_mape', 'forces_error_mse', 'forces_error_rms']
 orb_rows = []
@@ -66,9 +57,9 @@ def run_orb_error_test(supercell_scaling):
 
     benchmark = get_orb_benchmark(atoms)
 
-    for inference in orb_part_inference:
-        mp = inference.model_adapter.num_message_passing
-        result = inference.run(atoms, desired_partitions=NUM_PARTITIONS)
+    for mp in mp_list:
+        orb_partition_inference.model_adapter.num_message_passing = mp
+        result = orb_partition_inference.run(atoms, desired_partitions=NUM_PARTITIONS)
         
         orb_rows.append([
             len(atoms),
@@ -97,13 +88,13 @@ def run_mattersim_error_test(supercell_scaling):
     benchmark_energy = torch.mean(torch.tensor(benchmark_energy))
     benchmark_forces = torch.mean(torch.tensor(np.array(benchmark_forces)), dim=0)
 
-    for inference in mattersim_part_inference:
-        mp = inference.model_adapter.num_message_passing
+    for mp in mp_list:
+        mattersim_partition_inference.model_adapter.num_message_passing = mp
         
         result_energy = []
         result_forces = []
         for _ in range(MATTERSIM_ITERATIONS):
-            result = inference.run(atoms, desired_partitions=NUM_PARTITIONS)
+            result = mattersim_partition_inference.run(atoms, desired_partitions=NUM_PARTITIONS)
             result_energy.append(result["energy"])
             result_forces.append(result["forces"])
 
