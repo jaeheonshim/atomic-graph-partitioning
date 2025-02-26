@@ -1,9 +1,10 @@
-from adapter import AtomicModelAdapter
+from wrapper.adapter import AtomicModelAdapter
 
 import ase
 import networkx as nx
 import torch
 
+from orb_models.forcefield import pretrained
 from orb_models.forcefield.atomic_system import ase_atoms_to_atom_graphs
 from orb_models.forcefield.base import AtomGraphs
 from orb_models.forcefield.base import batch_graphs
@@ -20,7 +21,7 @@ class OrbModelAdapter(AtomicModelAdapter[AtomGraphs]):
     def __init__(self, *args, **kwargs):
         super().__init__(
             embedding_size=256,
-            num_message_passing=4,
+            # num_message_passing=4,
             *args, **kwargs
         )
 
@@ -59,7 +60,7 @@ class OrbModelAdapter(AtomicModelAdapter[AtomGraphs]):
             model=base,
         )
 
-        self.orbff = load_model_for_inference(model, 'https://orbitalmaterials-public-models.s3.us-west-1.amazonaws.com/forcefields/orb-v2-20241011.ckpt', self.device)
+        self.orbff = pretrained.orb_v2(device=self.device)
 
     def atoms_to_graph(self, atoms):
         return ase_atoms_to_atom_graphs(atoms, device=self.device)

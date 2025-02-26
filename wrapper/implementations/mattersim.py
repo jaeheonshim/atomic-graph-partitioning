@@ -1,4 +1,4 @@
-from adapter import AtomicModelAdapter
+from wrapper.adapter import AtomicModelAdapter
 
 from typing import Dict, List, Optional
 
@@ -15,7 +15,7 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
     def __init__(self, *args, **kwargs):
         super().__init__(
             embedding_size=128,
-            num_message_passing=5,
+            # num_message_passing=5,
             *args, **kwargs
         )
 
@@ -42,8 +42,9 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
         for i, graph in enumerate(graphs):
             part_index = part_indices[i]
 
-            root_atom_indices = self.partitions[part_index][self.roots[part_index]]
-            graph.atom_pos[self.roots[part_index]] = self.global_atom_pos[root_atom_indices]
+            for j in range(0, len(self.partitions[part_index])):
+                if self.roots[part_index][j]:
+                    graph.atom_pos[j] = self.global_atom_pos[self.partitions[part_index][j]]
 
         embeddings = []
         for input_graph in dataloader:

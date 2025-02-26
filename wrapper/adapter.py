@@ -30,7 +30,7 @@ class AtomicModelAdapter(Generic[GraphType]):
         """
         ...
 
-    def set_partition_info(self, all_atoms: ase.Atoms, partitions: torch.Tensor, roots: torch.Tensor):
+    def set_partition_info(self, all_atoms: ase.Atoms, partitions: list[list[int]], roots: list[list[bool]]):
         """
         Store information about the partition configuration so that it can be used in other methods
         """

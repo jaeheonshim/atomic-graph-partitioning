@@ -1,4 +1,4 @@
-from adapter import AtomicModelAdapter
+from wrapper.adapter import AtomicModelAdapter
 from partitioner import part_graph_extended
 
 import ase
@@ -42,9 +42,6 @@ class AtomicPartitionInference:
             indices_map.append(current_indices_map)
             partition_roots.append([j in partition_set[i] for j in current_indices_map])
 
-        indices_map = torch.tensor(indices_map)
-        partition_roots = torch.tensor(partition_roots)
-
         self.model_adapter.set_partition_info(atoms, indices_map, partition_roots)
 
         ### Graph Regressor
@@ -57,7 +54,10 @@ class AtomicPartitionInference:
             part_embeddings = self.model_adapter.forward_graph(input_graph, list(range(i, i + len(input_graph))))
 
             for j in range(0, len(part_embeddings)):
-                all_embeddings[indices_map[i+j][partition_roots[i+j]]] = part_embeddings[j][partition_roots[i+j]]
+                reverse_indices = indices_map[i+j]
+                for k in range(0, len(part_embeddings[j])):
+                    if partition_roots[i+j][k]:
+                        all_embeddings[reverse_indices[k]] = part_embeddings[j][k]
 
         ### Extract Energy
         energy = self.model_adapter.predict_energy(all_embeddings, atoms)
@@ -67,15 +67,3 @@ class AtomicPartitionInference:
             "energy": energy,
             "forces": forces
         }
-    
-from ase.io import read
-from ase.build import make_supercell
-from orb_models.forcefield.base import AtomGraphs
-from implementations.orb import OrbModelAdapter
-from implementations.mattersim import MatterSimModelAdapter
-
-orb_adapter = MatterSimModelAdapter()
-inference = AtomicPartitionInference(orb_adapter)
-
-atoms = read("datasets/H2O.xyz")
-print(inference.run(atoms, desired_partitions=5, parts_per_batch=1))
