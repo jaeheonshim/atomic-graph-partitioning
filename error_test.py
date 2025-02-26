@@ -14,9 +14,9 @@ import numpy as np
 
 import csv
 
-device = 'cpu'
+device = 'cuda'
 
-ATOMS_FILE = "datasets/test.xyz"
+ATOMS_FILE = "datasets/H2O.xyz"
 MAX_SUPERCELL_DIM = 7
 NUM_PARTITIONS = 10
 
@@ -126,6 +126,6 @@ def write_csv():
         
 for x in range(1, MAX_SUPERCELL_DIM):
     for y in range(x, x + 2):
-        run_orb_error_test(((x, 0, 0), (0, y, 0), (0, 0, y)))
+        # run_orb_error_test(((x, 0, 0), (0, y, 0), (0, 0, y)))
         run_mattersim_error_test(((x, 0, 0), (0, y, 0), (0, 0, y)))
         write_csv()

@@ -1,0 +1,53 @@
+---------------------------------------
+Begin Slurm Prolog: Feb-26-2025 01:49:32
+Job ID:    2930909
+User ID:   jshim87
+Account:   gts-vfung3
+Job name:  MattersimRunner
+Partition: gpu-h200
+QOS:       inferno
+---------------------------------------
+/storage/home/hcoda1/7/jshim87/.conda/envs/graph_partitioning/lib/python3.11/site-packages/orb_models/forcefield/pretrained.py:71: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  state_dict = torch.load(local_path, map_location="cpu")
+/storage/home/hcoda1/7/jshim87/atomic-graph-partitioning/wrapper/implementations/mattersim.py:221: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  checkpoint = torch.load(load_path, map_location=device)
+GPU tensorfloat matmuls precision set to 'high'. This can achieve up to 2x speedup on Nvidia A100 and H100 devices.
+Loading the pre-trained mattersim-v1.0.0-1M.pth model
+  0%|          | 0/10 [00:00<?, ?it/s]100%|██████████| 10/10 [00:00<00:00, 119.16it/s]
+Traceback (most recent call last):
+  File "/storage/home/hcoda1/7/jshim87/atomic-graph-partitioning/error_test.py", line 129, in <module>
+    run_orb_error_test(((x, 0, 0), (0, y, 0), (0, 0, y)))
+  File "/storage/home/hcoda1/7/jshim87/atomic-graph-partitioning/error_test.py", line 62, in run_orb_error_test
+    result = orb_partition_inference.run(atoms, desired_partitions=NUM_PARTITIONS)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/storage/home/hcoda1/7/jshim87/atomic-graph-partitioning/wrapper/inference.py", line 63, in run
+    energy = self.model_adapter.predict_energy(all_embeddings, atoms)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/storage/home/hcoda1/7/jshim87/atomic-graph-partitioning/wrapper/implementations/orb.py", line 107, in predict_energy
+    energy = energy + self.reference(torch.tensor(atoms.get_atomic_numbers()), n_node)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/storage/home/hcoda1/7/jshim87/.conda/envs/graph_partitioning/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1553, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/storage/home/hcoda1/7/jshim87/.conda/envs/graph_partitioning/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1562, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/storage/home/hcoda1/7/jshim87/.conda/envs/graph_partitioning/lib/python3.11/site-packages/orb_models/forcefield/graph_regressor.py", line 65, in forward
+    reduced = segment_ops.aggregate_nodes(one_hot_atomic, n_node, reduction="sum")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/storage/home/hcoda1/7/jshim87/.conda/envs/graph_partitioning/lib/python3.11/site-packages/orb_models/forcefield/segment_ops.py", line 45, in aggregate_nodes
+    segments = torch.arange(count, device=device).repeat_interleave(n_node)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cpu and cuda:0! (when checking argument for argument index in method wrapper_CUDA__index_select)
+---------------------------------------
+Begin Slurm Epilog: Feb-26-2025 01:49:47
+Job ID:        2930909
+User ID:       jshim87
+Account:       gts-vfung3
+Job name:      MattersimRunner
+Resources:     cpu=1,gres/gpu:h200=1,mem=4G,node=1
+Rsrc Used:     cput=00:00:15,vmem=0,walltime=00:00:15,mem=1758528K,energy_used=0
+Partition:     gpu-h200
+QOS:           inferno
+Nodes:         atl1-1-01-007-7-0
+---------------------------------------

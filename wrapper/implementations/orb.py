@@ -30,7 +30,7 @@ class OrbModelAdapter(AtomicModelAdapter[AtomGraphs]):
             weight_init=ref.coefficients, trainable=True
         )
 
-        base = get_base(num_message_passing_steps=4)
+        base = get_base()
 
         model = GraphRegressor(
             graph_head=EnergyHead(
@@ -60,7 +60,7 @@ class OrbModelAdapter(AtomicModelAdapter[AtomGraphs]):
             model=base,
         )
 
-        self.orbff = pretrained.orb_v2(device=self.device)
+        self.orbff = load_model_for_inference(model, 'https://orbitalmaterials-public-models.s3.us-west-1.amazonaws.com/forcefields/orb-v2-20241011.ckpt', self.device)
 
     def atoms_to_graph(self, atoms):
         return ase_atoms_to_atom_graphs(atoms, device=self.device)
@@ -93,7 +93,7 @@ class OrbModelAdapter(AtomicModelAdapter[AtomGraphs]):
         return embeddings
     
     def predict_energy(self, embeddings, atoms):
-        n_node = torch.tensor([embeddings.shape[0]])
+        n_node = torch.tensor([embeddings.shape[0]], device=self.device)
 
         input = segment_ops.aggregate_nodes(
             embeddings,
@@ -104,12 +104,12 @@ class OrbModelAdapter(AtomicModelAdapter[AtomGraphs]):
         energy = self.orbff.graph_head.mlp(input)
         energy = self.orbff.graph_head.normalizer.inverse(energy).squeeze(-1)
         energy = energy * n_node
-        energy = energy + self.reference(torch.tensor(atoms.get_atomic_numbers()), n_node)
+        energy = energy + self.reference(torch.tensor(atoms.get_atomic_numbers(), device=self.device), n_node)
         
         return energy
     
     def predict_forces(self, embeddings, atoms):
-        n_node = torch.tensor([embeddings.shape[0]])
+        n_node = torch.tensor([embeddings.shape[0]], device=self.device)
 
         forces = self.orbff.node_head.mlp(embeddings)
         system_means = segment_ops.aggregate_nodes(
