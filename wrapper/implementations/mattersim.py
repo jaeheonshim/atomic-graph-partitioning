@@ -1,6 +1,6 @@
 from adapter import AtomicModelAdapter
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import torch
 
@@ -15,6 +15,7 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
     def __init__(self, *args, **kwargs):
         super().__init__(
             embedding_size=128,
+            num_message_passing=5
             *args, **kwargs
         )
 
@@ -34,12 +35,15 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
         self.global_atom_pos = torch.tensor(all_atoms.positions, device=self.device, dtype=torch.float)
         self.global_atom_pos.requires_grad_(True)
 
-    def forward_graph(self, graph, part_index):
-        dataloader = DataLoader([graph])
+    def forward_graph(self, graphs, part_indices):
+        dataloader = DataLoader(graphs)
 
-        root_atom_indices = self.partitions[part_index][self.roots[part_index]]
+        # Replace the atom_pos property of each graph with a reference to global_atom_pos tensor
+        for i, graph in enumerate(graphs):
+            part_index = part_indices[i]
 
-        graph.atom_pos[self.roots[part_index]] = self.global_atom_pos[root_atom_indices]
+            root_atom_indices = self.partitions[part_index][self.roots[part_index]]
+            graph.atom_pos[self.roots[part_index]] = self.global_atom_pos[root_atom_indices]
 
         input_graph = next(iter(dataloader))
         input_graph = input_graph.to(self.device)
@@ -65,6 +69,7 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
                 self.energy,
             )
         ]
+        
         grad = torch.autograd.grad(
             outputs=[
                 self.energy,

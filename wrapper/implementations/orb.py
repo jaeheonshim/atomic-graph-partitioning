@@ -5,8 +5,8 @@ import networkx as nx
 import torch
 
 from orb_models.forcefield.atomic_system import ase_atoms_to_atom_graphs
-from networkx import Graph
 from orb_models.forcefield.base import AtomGraphs
+from orb_models.forcefield.base import batch_graphs
 
 from orb_models.forcefield import segment_ops
 
@@ -16,11 +16,11 @@ from orb_models.forcefield.graph_regressor import GraphRegressor, EnergyHead, No
 from orb_models.forcefield.graph_regressor import ScalarNormalizer, LinearReferenceEnergy
 from orb_models.forcefield.reference_energies import REFERENCE_ENERGIES
 
-
 class OrbModelAdapter(AtomicModelAdapter[AtomGraphs]):
     def __init__(self, *args, **kwargs):
         super().__init__(
             embedding_size=256,
+            num_message_passing=4,
             *args, **kwargs
         )
 
@@ -77,9 +77,19 @@ class OrbModelAdapter(AtomicModelAdapter[AtomGraphs]):
 
         return G
 
-    def forward_graph(self, graph):
-        batch = self.orbff.model(graph)
-        return batch.node_features["feat"] 
+    def forward_graph(self, graphs, part_indices):
+        batch = self.orbff.model(batch_graphs(graphs))
+        node_feats = batch.node_features["feat"]
+
+        embeddings = []
+        i = 0
+        j = 0
+        while i < len(graphs):
+            embeddings.append(node_feats[j:j+graphs[i].n_node.item()])
+            j += graphs[i].n_node.item()
+            i += 1
+
+        return embeddings
     
     def predict_energy(self, embeddings, atoms):
         n_node = torch.tensor([embeddings.shape[0]])
@@ -96,3 +106,18 @@ class OrbModelAdapter(AtomicModelAdapter[AtomGraphs]):
         energy = energy + self.reference(torch.tensor(atoms.get_atomic_numbers()), n_node)
         
         return energy
+    
+    def predict_forces(self, embeddings, atoms):
+        n_node = torch.tensor([embeddings.shape[0]])
+
+        forces = self.orbff.node_head.mlp(embeddings)
+        system_means = segment_ops.aggregate_nodes(
+            forces, n_node, reduction="mean"
+        )
+        node_broadcasted_means = torch.repeat_interleave(
+            system_means, n_node, dim=0
+        )
+        forces = forces - node_broadcasted_means
+        forces = self.orbff.node_head.normalizer.inverse(forces)
+        
+        return forces
