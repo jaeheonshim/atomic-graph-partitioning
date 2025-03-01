@@ -7,9 +7,16 @@ import torch
 GraphType = TypeVar("GraphType")
 
 class AtomicModelAdapter(Generic[GraphType]):
-    def __init__(self, *, device: torch.device = "cpu", embedding_size: int):
+    def __init__(
+        self,
+        *,
+        embedding_size: int,
+        num_message_passing: int,
+        device: torch.device = "cpu"
+    ):
         self.device = device
         self.embedding_size = embedding_size
+        self.num_message_passing = num_message_passing
 
     def atoms_to_graph(self, atoms: ase.Atoms) -> GraphType:
         """
@@ -23,11 +30,22 @@ class AtomicModelAdapter(Generic[GraphType]):
         """
         ...
 
-    def forward_graph(self, graph: GraphType) -> torch.Tensor:
+    def set_partition_info(self, all_atoms: ase.Atoms, partitions: list[list[int]], roots: list[list[bool]]):
+        """
+        Store information about the partition configuration so that it can be used in other methods
+        """
+        self.all_atoms = all_atoms
+        self.partitions = partitions
+        self.roots = roots
+
+    def forward_graph(self, graphs: list[GraphType], part_indices: list[int]) -> list[torch.Tensor]:
         """
         Model specific graph through graph regressor for embeddigs
         """
         ...
     
-    def forward_energy(self, embeddings: torch.Tensor, atoms: ase.Atoms) -> torch.Tensor:
+    def predict_energy(self, embeddings: torch.Tensor, atoms: ase.Atoms) -> torch.Tensor:
+        ...
+
+    def predict_forces(self, embeddings: torch.Tensor, atoms: ase.Atoms) -> torch.Tensor:
         ...

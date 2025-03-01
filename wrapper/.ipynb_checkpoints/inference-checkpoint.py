@@ -1,8 +1,6 @@
 from wrapper.adapter import AtomicModelAdapter
 from partitioner import part_graph_extended
 
-import gc
-
 import ase
 import torch
 from tqdm import tqdm
@@ -60,10 +58,6 @@ class AtomicPartitionInference:
                 for k in range(0, len(part_embeddings[j])):
                     if partition_roots[i+j][k]:
                         all_embeddings[reverse_indices[k]] = part_embeddings[j][k]
-
-            del part_embeddings, input_graph
-            gc.collect()
-            torch.cuda.empty_cache()
 
         ### Extract Energy
         energy = self.model_adapter.predict_energy(all_embeddings, atoms)

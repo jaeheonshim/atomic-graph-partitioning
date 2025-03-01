@@ -1,4 +1,6 @@
-from adapter import AtomicModelAdapter
+from wrapper.adapter import AtomicModelAdapter
+
+from typing import Dict, List, Optional
 
 import torch
 
@@ -13,6 +15,7 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
     def __init__(self, *args, **kwargs):
         super().__init__(
             embedding_size=128,
+            # num_message_passing=5,
             *args, **kwargs
         )
 
@@ -24,17 +27,40 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
 
     def graph_to_networkx(self, graph):
         return to_networkx(graph)
-
-    def forward_graph(self, graph):
-        dataloader = DataLoader([graph])
-
-        input_graph = next(iter(dataloader))
-        input_graph = input_graph.to(self.device)
-        input_dict = batch_to_dict(input_graph)
-
-        return self.model.forward(input_dict)
     
-    def forward_energy(self, embeddings, atoms):
+    def set_partition_info(self, all_atoms, partitions, roots):
+        super().set_partition_info(all_atoms, partitions, roots)
+
+        # Need to store all global_atom_pos in one place so that we can use them for grad calculation for forces later
+        self.global_atom_pos = torch.tensor(all_atoms.positions, device=self.device, dtype=torch.float)
+        self.global_atom_pos.requires_grad_(True)
+
+    def forward_graph(self, graphs, part_indices):
+        dataloader = DataLoader(graphs)
+
+        # Replace the atom_pos property of each graph with a reference to global_atom_pos tensor
+        for i, graph in enumerate(graphs):
+            part_index = part_indices[i]
+
+            partition_indices = torch.tensor(
+                self.partitions[part_index],
+                device=self.device,
+                dtype=torch.long,
+            )
+
+            new_atom_pos = self.global_atom_pos[partition_indices]
+            graph.atom_pos = new_atom_pos
+
+        embeddings = []
+        for input_graph in dataloader:
+            input_graph = input_graph.to(self.device)
+            input_dict = batch_to_dict(input_graph)
+
+            embeddings.append(self.model.forward(input_dict))
+
+        return embeddings
+    
+    def predict_energy(self, embeddings, atoms):
         atomic_numbers = torch.tensor(atoms.get_atomic_numbers()).long()
         batch = torch.zeros((len(atoms)), dtype=torch.int64, device=self.device)
 
@@ -42,7 +68,33 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
         energy = self.model.normalizer(energy, atomic_numbers)
         energy = scatter(energy, batch, dim=0, dim_size=1)
 
+        self.energy = energy
+
         return energy
+    
+    def predict_forces(self, embeddings, atoms):
+        grad_outputs: List[Optional[torch.Tensor]] = [
+            torch.ones_like(
+                self.energy,
+            )
+        ]
+        
+        grad = torch.autograd.grad(
+            outputs=[
+                self.energy,
+            ],
+            inputs=[self.global_atom_pos],
+            grad_outputs=grad_outputs,
+            create_graph=False,
+        )
+
+        # Dump out gradient for forces
+        force_grad = grad[0]
+        if force_grad is not None:
+            forces = torch.neg(force_grad)
+            
+            return forces
+
 
 ### Patched implementations of MatterSim classes
 

@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J MattersimRunner
 #SBATCH -A gts-vfung3
-#SBATCH -N 1 --gres=gpu:A100:1
+#SBATCH -N 1 --gres=gpu:H200:1
 #SBATCH -q inferno
-#SBATCH --mem-per-gpu=80G
+#SBATCH -t 4:00:00
 
-python mattersim_test.py
+python error_test.py
