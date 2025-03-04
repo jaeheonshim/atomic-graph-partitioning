@@ -38,7 +38,7 @@ class AtomicModelAdapter(Generic[GraphType]):
         self.partitions = partitions
         self.roots = roots
 
-    def forward_graph(self, graphs: list[GraphType], part_indices: list[int]) -> list[torch.Tensor]:
+    def forward_graph(self, graphs: list[GraphType], part_indices: list[int]) -> list[any]:
         """
         Model specific graph through graph regressor for embeddigs
         """

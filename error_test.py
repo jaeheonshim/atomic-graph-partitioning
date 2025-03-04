@@ -14,13 +14,13 @@ import numpy as np
 
 import csv
 
-device = 'cuda'
+device = 'cpu'
 
 ATOMS_FILE = "datasets/H2O.xyz"
 MAX_SUPERCELL_DIM = 2
 NUM_PARTITIONS = 10
 
-MATTERSIM_ITERATIONS = 10 # Mattersim is a little weird so I will run multiple times and average
+MATTERSIM_ITERATIONS = 5 # Mattersim is a little weird so I will run multiple times and average
 
 orbff = pretrained.orb_v2(device=device)
 
@@ -126,6 +126,6 @@ def write_csv():
         
 for x in range(1, MAX_SUPERCELL_DIM):
     for y in range(x, x + 2):
-        run_orb_error_test(((x, 0, 0), (0, y, 0), (0, 0, y)))
-        # run_mattersim_error_test(((x, 0, 0), (0, y, 0), (0, 0, y)))
+        # run_orb_error_test(((x, 0, 0), (0, y, 0), (0, 0, y)))
+        run_mattersim_error_test(((x, 0, 0), (0, y, 0), (0, 0, y)))
         write_csv()
