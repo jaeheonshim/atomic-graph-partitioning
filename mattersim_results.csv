@@ -1,2 +1,2 @@
-num_atoms,mp,energy_error_abs,energy_error_pct,forces_error_max,forces_error_mae,forces_error_mape,forces_error_mse,forces_error_rms
-192,4,0.0,0.0,4.470348358154297e-07,7.22752986348496e-08,12.061551213264465,1.0009793219452855e-14,1.0004895756310361e-07
+num_atoms,num_parts,num_mp,energy_error_abs,energy_error_pct,forces_error_max,forces_error_mae,forces_error_mape,forces_error_ratio,forces_error_mse,forces_error_rms,benchmark_time,all_partition_time,avg_partition_time
+192,20,5,0.0,0.0,3.26777808368206e-07,6.530618179567682e-08,34.99523401260376,3.1015566e-07,8.18203926784616e-15,9.045462689982742e-08,0.3928375244140625,3.0842143535614013,0.30842143535614014
