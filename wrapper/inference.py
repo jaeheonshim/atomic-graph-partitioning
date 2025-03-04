@@ -1,5 +1,5 @@
 from wrapper.adapter import AtomicModelAdapter
-from partitioner import part_graph_extended
+from wrapper.partitioner import part_graph_extended
 
 import gc
 

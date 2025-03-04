@@ -14,7 +14,7 @@ from mattersim.forcefield.potential import batch_to_dict
 class MatterSimModelAdapter(AtomicModelAdapter[Data]):
     def __init__(self, *args, **kwargs):
         super().__init__(
-            embedding_size=3,
+            embedding_size=128,
             # num_message_passing=5,
             *args, **kwargs
         )
@@ -32,6 +32,7 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
         super().init_partition(all_atoms, partitions, roots)
 
         self.total_energy = 0
+        self.forces = torch.zeros((len(all_atoms), 3), dtype=torch.float32, device=self.device)
         self.atomic_numbers = torch.tensor(all_atoms.get_atomic_numbers()).long()
 
     def forward_graph(self, graphs, part_indices):
@@ -48,14 +49,14 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
             ## Energy
             energy = self.model.final(result).view(-1)
             energy = self.model.normalizer(energy, self.atomic_numbers[self.partitions[part_indices[i]]])
+            forces = self._compute_forces_from_grad(input_dict['atom_pos'], energy)
             
             for j in range(len(self.partitions[part_indices[i]])):
                 if self.roots[part_indices[i]][j]:
                     self.total_energy += energy[j]
+                    self.forces[self.partitions[part_indices[i]][j]] = forces[j]
 
-            forces = self._compute_forces_from_grad(input_dict['atom_pos'], energy)
-            
-            embeddings.append(forces)
+            embeddings.append(result)
 
         return embeddings
     
@@ -86,7 +87,7 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
         return self.total_energy
     
     def predict_forces(self, embeddings, atoms):
-        return embeddings
+        return self.forces
 
 
 ### Patched implementations of MatterSim classes

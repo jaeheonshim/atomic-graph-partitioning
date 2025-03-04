@@ -29,7 +29,7 @@ mattersim_partition_inference = AtomicPartitionInference(MatterSimModelAdapter(d
 
 mp_list = [4]
 
-fields = ['num_atoms', 'mp', 'energy_error_abs', 'energy_error_pct', 'forces_error_max', 'forces_error_mae', 'forces_error_mape', 'forces_error_mse', 'forces_error_rms']
+fields = ['num_atoms', 'num_parts', 'num_mp', 'energy_error_abs', 'energy_error_pct', 'energy_error_ratio', 'forces_error_max', 'forces_error_mae', 'forces_error_mape', 'forces_error_mse', 'forces_error_rms', 'forces_error_ratio', 'benchmark_time', 'all_partition_time', 'avg_partition_time']
 orb_rows = []
 mattersim_rows = []
 
