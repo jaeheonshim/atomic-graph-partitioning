@@ -34,7 +34,7 @@ orb_rows = []
 mattersim_rows = []
 
 def get_mattersim_benchmark(atoms):
-    mattersim_calc = MatterSimCalculator()
+    mattersim_calc = MatterSimCalculator(compute_stress=False)
     atoms.calc = mattersim_calc
 
     return {
