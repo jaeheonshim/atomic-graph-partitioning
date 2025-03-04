@@ -28,8 +28,8 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
     def graph_to_networkx(self, graph):
         return to_networkx(graph)
     
-    def set_partition_info(self, all_atoms, partitions, roots):
-        super().set_partition_info(all_atoms, partitions, roots)
+    def init_partition(self, all_atoms, partitions, roots):
+        super().init_partition(all_atoms, partitions, roots)
 
         self.total_energy = 0
         self.atomic_numbers = torch.tensor(all_atoms.get_atomic_numbers()).long()

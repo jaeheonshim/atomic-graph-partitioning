@@ -44,7 +44,7 @@ class AtomicPartitionInference:
             indices_map.append(current_indices_map)
             partition_roots.append([j in partition_set[i] for j in current_indices_map])
 
-        self.model_adapter.set_partition_info(atoms, indices_map, partition_roots)
+        self.model_adapter.init_partition(atoms, indices_map, partition_roots)
 
         ### Graph Regressor
         all_embeddings = torch.zeros((len(atoms), self.model_adapter.embedding_size), dtype=torch.float32, device=self.model_adapter.device)
