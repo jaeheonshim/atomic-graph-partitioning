@@ -9,6 +9,8 @@ class PartitionPotential(Potential):
         include_forces: bool = True,
         include_stresses: bool = True,
         dataset_idx: int = -1,
+        return_intermediate: bool = False,
+        root_node_indices: torch.Tensor | None = None,
     ):
         output = {}
         if self.model_name == "graphormer" or self.model_name == "geomformer":
@@ -34,9 +36,20 @@ class PartitionPotential(Potential):
                 )
                 volume = torch.linalg.det(input["cell"])
 
-            energies, energies_i = self.model.forward(input, dataset_idx, return_energies_per_atom=True)
-            output["energies"] = energies
-            output["energies_i"] = energies_i
+            if return_intermediate is True:
+                energies, internal_attrs = self.model.forward(
+                    input, dataset_idx, return_intermediate=True
+                )
+                return energies, internal_attrs
+            else:
+                energies, energies_i = self.model.forward(input, dataset_idx, return_energies_per_atom=True)
+                if root_node_indices is None:
+                    output["energies"] = energies
+                else:
+                    root_node_indices = root_node_indices.to(energies_i.device)
+                    energies = torch.sum(energies_i[root_node_indices], dim=0)
+                    output["energies"] = energies
+                output["energies_i"] = energies_i
 
             # Only take first derivative if only force is required
             if include_forces is True and include_stresses is False:
