@@ -13,12 +13,18 @@ import torch
 import numpy as np
 
 import csv
+import time
+import os
 
-device = 'cuda'
+MATTERSIM_RESULTS = "results/test/mattersim_results.csv"
+ORB_RESULTS = "results/test/orb_results.csv"
 
-ATOMS_FILE = "datasets/H2O.xyz"
-MAX_SUPERCELL_DIM = 2
-NUM_PARTITIONS = 10
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+ATOMS_FILE = "datasets/test.xyz"
+MAX_SUPERCELL_DIM = 7
+NUM_PARTITIONS = 20
+mp_list = [2,3,4,5,6,7,8]
 
 MATTERSIM_ITERATIONS = 10 # Mattersim is a little weird so I will run multiple times and average
 
@@ -27,14 +33,12 @@ orbff = pretrained.orb_v2(device=device)
 orb_partition_inference = AtomicPartitionInference(OrbModelAdapter(device=device, num_message_passing=3))
 mattersim_partition_inference = AtomicPartitionInference(MatterSimModelAdapter(device=device, num_message_passing=3))
 
-mp_list = [4]
-
-fields = ['num_atoms', 'mp', 'energy_error_abs', 'energy_error_pct', 'forces_error_max', 'forces_error_mae', 'forces_error_mape', 'forces_error_mse', 'forces_error_rms']
+fields = ['num_atoms', 'num_parts', 'avg_part_size', 'num_mp', 'energy_error_abs', 'energy_error_pct', 'forces_error_max', 'forces_error_mae', 'forces_error_mape', 'forces_error_ratio','forces_error_mse', 'forces_error_rms', 'benchmark_time', 'all_partition_time', 'avg_partition_time']
 orb_rows = []
 mattersim_rows = []
 
 def get_mattersim_benchmark(atoms):
-    mattersim_calc = MatterSimCalculator()
+    mattersim_calc = MatterSimCalculator(compute_stress=False)
     atoms.calc = mattersim_calc
 
     return {
@@ -47,85 +51,112 @@ def get_orb_benchmark(atoms):
     result = orbff.predict(input_graph)
 
     return {
-        "energy": result["graph_pred"],
-        "forces": result["node_pred"]
+        "energy": result["graph_pred"].detach().cpu(),
+        "forces": result["node_pred"].detach().cpu()
     }
 
-def run_orb_error_test(supercell_scaling):
-    atoms = read(ATOMS_FILE)
-    atoms = make_supercell(atoms, supercell_scaling)
-
+def run_orb_error_test(atoms, num_parts, num_mp):
+    start = time.time()
     benchmark = get_orb_benchmark(atoms)
+    end = time.time()
 
-    for mp in mp_list:
-        orb_partition_inference.model_adapter.num_message_passing = mp
-        result = orb_partition_inference.run(atoms, desired_partitions=NUM_PARTITIONS)
-        
-        orb_rows.append([
-            len(atoms),
-            mp,
-            abs(benchmark["energy"] - result["energy"]).item(),
-            abs((benchmark["energy"] - result["energy"]) / benchmark["energy"]).item() * 100,
-            torch.max(torch.abs(benchmark["forces"] - result["forces"])).item(),
-            torch.mean(torch.abs(benchmark["forces"] - result["forces"])).item(),
-            torch.mean(torch.abs((benchmark["forces"] - result["forces"]) / benchmark["forces"])).item() * 100,
-            torch.mean(torch.pow(benchmark["forces"] - result["forces"], 2)).item(),
-            torch.sqrt(torch.mean(torch.pow(benchmark["forces"] - result["forces"], 2))).item(),
-        ])
+    benchmark_time = end - start
 
-def run_mattersim_error_test(supercell_scaling):
-    atoms = read(ATOMS_FILE)
-    atoms = make_supercell(atoms, supercell_scaling)
+    orb_partition_inference.model_adapter.num_message_passing = num_mp
+    result = orb_partition_inference.run(atoms, desired_partitions=num_parts)
+    
+    row = [
+        len(atoms),
+        num_parts,
+        np.mean(result['partition_sizes']),
+        num_mp,
+        abs(benchmark["energy"] - result["energy"]).item(),
+        abs((benchmark["energy"] - result["energy"]) / benchmark["energy"]).item() * 100,
+        torch.max(torch.abs(benchmark["forces"] - result["forces"])).item(),
+        torch.mean(torch.abs(benchmark["forces"] - result["forces"])).item(),
+        torch.mean(torch.abs((benchmark["forces"] - result["forces"]) / benchmark["forces"])).item() * 100,
+        np.mean(np.linalg.norm(benchmark["forces"] - result["forces"], ord=1, axis=1) / np.linalg.norm(benchmark["forces"], ord=1, axis=1)),
+        torch.mean(torch.pow(benchmark["forces"] - result["forces"], 2)).item(),
+        torch.sqrt(torch.mean(torch.pow(benchmark["forces"] - result["forces"], 2))).item(),
+        benchmark_time,
+        np.sum(result['times']),
+        np.mean(result['times'])
+    ]
 
+    file_exists = os.path.isfile(ORB_RESULTS)
+
+    with open(ORB_RESULTS, 'a') as csvfile:
+        writer = csv.writer(csvfile)
+
+        if not file_exists:
+            writer.writerow(fields)
+
+        writer.writerow(row)
+
+def run_mattersim_error_test(atoms, num_parts, num_mp):
     benchmark_energy = []
     benchmark_forces = []
 
+    start = time.time()
     for _ in range(MATTERSIM_ITERATIONS):
         benchmark = get_mattersim_benchmark(atoms)
         benchmark_energy.append(benchmark["energy"])
         benchmark_forces.append(benchmark["forces"])
+    end = time.time()
+
+    avg_benchmark_time = (end - start) / MATTERSIM_ITERATIONS
 
     benchmark_energy = np.mean(benchmark_energy)
     benchmark_forces = np.mean(benchmark_forces, axis=0)
 
-    for mp in mp_list:
-        mattersim_partition_inference.model_adapter.num_message_passing = mp
-        
-        result_energy = []
-        result_forces = []
-        for _ in range(MATTERSIM_ITERATIONS):
-            result = mattersim_partition_inference.run(atoms, desired_partitions=NUM_PARTITIONS)
-            result_energy.append(result["energy"].detach().cpu())
-            result_forces.append(np.array(result["forces"].detach().cpu()))
+    mattersim_partition_inference.model_adapter.num_message_passing = num_mp
 
-        result_energy = np.mean(result_energy)
-        result_forces = np.mean(result_forces, axis=0)
-        
-        mattersim_rows.append([
-            len(atoms),
-            mp,
-            abs(benchmark_energy - result_energy).item(),
-            abs((benchmark_energy - result_energy) / benchmark_energy).item() * 100,
-            np.max(np.abs(benchmark_forces - result_forces)).item(),
-            np.mean(np.abs(benchmark_forces - result_forces)).item(),
-            np.mean(np.abs((benchmark_forces - result_forces) / benchmark_forces)).item() * 100,
-            np.mean((benchmark_forces - result_forces) ** 2).item(),
-            np.sqrt(np.mean((benchmark_forces - result_forces) ** 2)).item(),
-        ])
+    result_energy = []
+    result_forces = []
+    result_times = []
+    for _ in range(MATTERSIM_ITERATIONS):
+        result = mattersim_partition_inference.run(atoms, desired_partitions=NUM_PARTITIONS)
+        result_energy.append(result["energy"])
+        result_forces.append(result["forces"])
+        result_times.append(result["times"])
 
-def write_csv():
-    with open('orb_results.csv', 'w') as file:
-        writer = csv.writer(file)
-        writer.writerow(fields)
-        writer.writerows(orb_rows)
+    result_energy = np.mean(result_energy)
+    result_forces = np.mean(result_forces, axis=0)
+    result_times = np.mean(result_times, axis=0)
+    
+    row = [
+        len(atoms),
+        num_parts,
+        np.mean(result['partition_sizes']),
+        num_mp,
+        abs(benchmark_energy - result_energy).item(),
+        abs((benchmark_energy - result_energy) / benchmark_energy).item() * 100,
+        np.max(np.abs(benchmark_forces - result_forces)).item(),
+        np.mean(np.abs(benchmark_forces - result_forces)).item(),
+        np.mean(np.abs((benchmark_forces - result_forces) / benchmark_forces)).item() * 100,
+        np.mean(np.linalg.norm(benchmark_forces - result_forces, ord=1, axis=1) / np.linalg.norm(benchmark_forces, ord=1, axis=1)),
+        np.mean((benchmark_forces - result_forces) ** 2).item(),
+        np.sqrt(np.mean((benchmark_forces - result_forces) ** 2)).item(),
+        avg_benchmark_time,
+        np.sum(result_times),
+        np.mean(result_times)
+    ]
+    
+    file_exists = os.path.isfile(MATTERSIM_RESULTS)
 
-    with open('mattersim_results.csv', 'w') as file:
-        writer = csv.writer(file)
-        writer.writerow(fields)
-        writer.writerows(mattersim_rows)
+    with open(MATTERSIM_RESULTS, 'a') as csvfile:
+        writer = csv.writer(csvfile)
+
+        if not file_exists:
+            writer.writerow(fields)
+
+        writer.writerow(row)
         
 for x in range(1, MAX_SUPERCELL_DIM):
     for y in range(x, x + 2):
-        run_orb_error_test(((x, 0, 0), (0, y, 0), (0, 0, y)))
-        # run_mattersim_error_test(((x, 0, 0), (0, y, 0), (0, 0, y)))
-        write_csv()
+        for mp in mp_list:
+            atoms = read(ATOMS_FILE)
+            atoms = make_supercell(atoms, ((x, 0, 0), (0, y, 0), (0, 0, y)))
+
+            # run_orb_error_test(atoms, NUM_PARTITIONS, mp)
+            run_mattersim_error_test(atoms, NUM_PARTITIONS, mp)

@@ -1,0 +1,2 @@
+num_atoms,mp,energy_error_abs,energy_error_pct,forces_error_max,forces_error_mae,forces_error_mape,forces_error_mse,forces_error_rms
+192,4,0.0,0.0,3.5762786865234375e-07,6.806823193983291e-08,11.010564863681793,8.583551519569538e-15,9.264746125836609e-08

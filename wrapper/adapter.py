@@ -30,7 +30,7 @@ class AtomicModelAdapter(Generic[GraphType]):
         """
         ...
 
-    def set_partition_info(self, all_atoms: ase.Atoms, partitions: list[list[int]], roots: list[list[bool]]):
+    def init_partition(self, all_atoms: ase.Atoms, partitions: list[list[int]], roots: list[list[bool]]):
         """
         Store information about the partition configuration so that it can be used in other methods
         """
@@ -38,7 +38,7 @@ class AtomicModelAdapter(Generic[GraphType]):
         self.partitions = partitions
         self.roots = roots
 
-    def forward_graph(self, graphs: list[GraphType], part_indices: list[int]) -> list[torch.Tensor]:
+    def forward_graph(self, graphs: list[GraphType], part_indices: list[int]) -> list[any]:
         """
         Model specific graph through graph regressor for embeddigs
         """
