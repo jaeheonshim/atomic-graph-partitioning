@@ -46,14 +46,22 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
 
             result = self.model.forward(input_dict)
 
+            slice = torch.tensor(self.roots[part_indices[i]], device=self.device)
+
             ## Energy
             energy = self.model.final(result).view(-1)
             energy = self.model.normalizer(energy, self.atomic_numbers[self.partitions[part_indices[i]]])
-            forces = self._compute_forces_from_grad(input_dict['atom_pos'], energy)
-            
+
             for j in range(len(self.partitions[part_indices[i]])):
                 if self.roots[part_indices[i]][j]:
                     self.total_energy += energy[j]
+
+            ## Forces
+            energy = energy[slice]
+            forces = self._compute_forces_from_grad(input_dict['atom_pos'], energy)
+
+            for j in range(len(self.partitions[part_indices[i]])):
+                if self.roots[part_indices[i]][j]:
                     self.forces[self.partitions[part_indices[i]][j]] = forces[j]
 
             embeddings.append(result)

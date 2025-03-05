@@ -24,9 +24,9 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 ATOMS_FILE = "datasets/test.xyz"
 MAX_SUPERCELL_DIM = 7
 NUM_PARTITIONS = 20
-mp_list = [2,3,4,5,6,7,8]
+mp_list = [2,3,4,5,6]
 
-MATTERSIM_ITERATIONS = 10 # Mattersim is a little weird so I will run multiple times and average
+MATTERSIM_ITERATIONS = 1 # Mattersim is a little weird so I will run multiple times and average
 
 orbff = pretrained.orb_v2(device=device)
 
@@ -152,11 +152,17 @@ def run_mattersim_error_test(atoms, num_parts, num_mp):
 
         writer.writerow(row)
         
-for x in range(1, MAX_SUPERCELL_DIM):
-    for y in range(x, x + 2):
-        for mp in mp_list:
-            atoms = read(ATOMS_FILE)
-            atoms = make_supercell(atoms, ((x, 0, 0), (0, y, 0), (0, 0, y)))
+# for x in range(1, MAX_SUPERCELL_DIM):
+#     for y in range(x, x + 2):
+#         for mp in mp_list:
+#             atoms = read(ATOMS_FILE)
+#             atoms = make_supercell(atoms, ((x, 0, 0), (0, y, 0), (0, 0, y)))
 
-            # run_orb_error_test(atoms, NUM_PARTITIONS, mp)
-            run_mattersim_error_test(atoms, NUM_PARTITIONS, mp)
+#             # run_orb_error_test(atoms, NUM_PARTITIONS, mp)
+#             run_mattersim_error_test(atoms, NUM_PARTITIONS, mp)
+
+atoms = read(ATOMS_FILE)
+atoms = make_supercell(atoms, ((1, 0, 0), (0, 1, 0), (0, 0, 1)))
+
+# run_orb_error_test(atoms, NUM_PARTITIONS, mp)
+run_mattersim_error_test(atoms, NUM_PARTITIONS, 4)
