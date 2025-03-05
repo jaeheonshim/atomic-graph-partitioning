@@ -24,7 +24,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 ATOMS_FILE = "datasets/H2O.xyz"
 MAX_SUPERCELL_DIM = 7
 NUM_PARTITIONS = 20
-mp_list = [2,3,4,5]
+mp_list = [2,3,4,5,6,7]
 
 MATTERSIM_ITERATIONS = 10 # Mattersim is a little weird so I will run multiple times and average
 
@@ -38,7 +38,7 @@ orb_rows = []
 mattersim_rows = []
 
 def get_mattersim_benchmark(atoms):
-    mattersim_calc = MatterSimCalculator()
+    mattersim_calc = MatterSimCalculator(compute_stress=False)
     atoms.calc = mattersim_calc
 
     return {
@@ -51,8 +51,8 @@ def get_orb_benchmark(atoms):
     result = orbff.predict(input_graph)
 
     return {
-        "energy": result["graph_pred"],
-        "forces": result["node_pred"]
+        "energy": result["graph_pred"].detach().cpu(),
+        "forces": result["node_pred"].detach().cpu()
     }
 
 def run_orb_error_test(atoms, num_parts, num_mp):
@@ -156,5 +156,5 @@ for x in range(1, MAX_SUPERCELL_DIM):
             atoms = read(ATOMS_FILE)
             atoms = make_supercell(atoms, ((x, 0, 0), (0, y, 0), (0, 0, y)))
 
-            run_orb_error_test(atoms, NUM_PARTITIONS, mp)
+            # run_orb_error_test(atoms, NUM_PARTITIONS, mp)
             run_mattersim_error_test(atoms, NUM_PARTITIONS, mp)
