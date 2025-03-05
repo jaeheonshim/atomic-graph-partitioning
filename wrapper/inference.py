@@ -94,5 +94,6 @@ class AtomicPartitionInference:
         return {
             "energy": energy,
             "forces": forces,
+            "partition_sizes": [len(p) for p in extended_partition_set],
             "times": np.array(times)
         }

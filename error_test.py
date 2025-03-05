@@ -16,15 +16,15 @@ import csv
 import time
 import os
 
-MATTERSIM_RESULTS = "results/mattersim_results.csv"
-ORB_RESULTS = "results/orb_results.csv"
+MATTERSIM_RESULTS = "results/test/mattersim_results.csv"
+ORB_RESULTS = "results/test/orb_results.csv"
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-ATOMS_FILE = "datasets/H2O.xyz"
+ATOMS_FILE = "datasets/test.xyz"
 MAX_SUPERCELL_DIM = 7
 NUM_PARTITIONS = 20
-mp_list = [2,3,4,5,6,7]
+mp_list = [2,3,4,5,6,7,8]
 
 MATTERSIM_ITERATIONS = 10 # Mattersim is a little weird so I will run multiple times and average
 
@@ -33,7 +33,7 @@ orbff = pretrained.orb_v2(device=device)
 orb_partition_inference = AtomicPartitionInference(OrbModelAdapter(device=device, num_message_passing=3))
 mattersim_partition_inference = AtomicPartitionInference(MatterSimModelAdapter(device=device, num_message_passing=3))
 
-fields = ['num_atoms', 'num_parts', 'num_mp', 'energy_error_abs', 'energy_error_pct', 'forces_error_max', 'forces_error_mae', 'forces_error_mape', 'forces_error_ratio','forces_error_mse', 'forces_error_rms', 'benchmark_time', 'all_partition_time', 'avg_partition_time']
+fields = ['num_atoms', 'num_parts', 'avg_part_size', 'num_mp', 'energy_error_abs', 'energy_error_pct', 'forces_error_max', 'forces_error_mae', 'forces_error_mape', 'forces_error_ratio','forces_error_mse', 'forces_error_rms', 'benchmark_time', 'all_partition_time', 'avg_partition_time']
 orb_rows = []
 mattersim_rows = []
 
@@ -68,6 +68,7 @@ def run_orb_error_test(atoms, num_parts, num_mp):
     row = [
         len(atoms),
         num_parts,
+        np.mean(result['partition_sizes']),
         num_mp,
         abs(benchmark["energy"] - result["energy"]).item(),
         abs((benchmark["energy"] - result["energy"]) / benchmark["energy"]).item() * 100,
@@ -126,6 +127,7 @@ def run_mattersim_error_test(atoms, num_parts, num_mp):
     row = [
         len(atoms),
         num_parts,
+        np.mean(result['partition_sizes']),
         num_mp,
         abs(benchmark_energy - result_energy).item(),
         abs((benchmark_energy - result_energy) / benchmark_energy).item() * 100,
