@@ -2,7 +2,6 @@ from wrapper.inference import AtomicPartitionInference
 from wrapper.implementations.mattersim import MatterSimModelAdapter
 from wrapper.implementations.orb import OrbModelAdapter
 
-from ase import Atoms
 from ase.io import read
 from ase.build import make_supercell
 
@@ -17,24 +16,24 @@ import csv
 import time
 import os
 
-MATTERSIM_RESULTS = "results/test/mattersim_results_randomized.csv"
-ORB_RESULTS = "results/test/orb_results_randomized.csv"
+# MATTERSIM_RESULTS = "results/test/mattersim_results.csv"
+ORB_RESULTS = "results/test/orb_results.csv"
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 ATOMS_FILE = "datasets/test.xyz"
+MAX_SUPERCELL_DIM = 9
 NUM_PARTITIONS = 60
 mp_list = [2,3,4,5,6,7,8]
-box_sizes = [10, 25, 50, 100]
 
-MATTERSIM_ITERATIONS = 1 # Mattersim is a little weird so I will run multiple times and average
+MATTERSIM_ITERATIONS = 10 # Mattersim is a little weird so I will run multiple times and average
 
 orbff = pretrained.orb_v2(device=device)
 
 orb_partition_inference = AtomicPartitionInference(OrbModelAdapter(device=device, num_message_passing=3))
 mattersim_partition_inference = AtomicPartitionInference(MatterSimModelAdapter(device=device, num_message_passing=3))
 
-fields = ['num_atoms', 'num_parts', 'avg_part_size', 'num_mp', 'energy_error_abs', 'energy_error_pct', 'forces_error_max', 'forces_error_mae', 'forces_error_mape', 'forces_error_ratio','forces_error_mse', 'forces_error_rms', 'benchmark_time', 'all_partition_time', 'avg_partition_time', 'box_size']
+fields = ['num_atoms', 'num_parts', 'avg_part_size', 'num_mp', 'energy_error_abs', 'energy_error_pct', 'forces_error_max', 'forces_error_mae', 'forces_error_mape', 'forces_error_ratio','forces_error_mse', 'forces_error_rms', 'benchmark_time', 'all_partition_time', 'avg_partition_time']
 orb_rows = []
 mattersim_rows = []
 
@@ -84,7 +83,15 @@ def run_orb_error_test(atoms, num_parts, num_mp):
         np.mean(result['times'])
     ]
 
-    return row
+    file_exists = os.path.isfile(ORB_RESULTS)
+
+    with open(ORB_RESULTS, 'a') as csvfile:
+        writer = csv.writer(csvfile)
+
+        if not file_exists:
+            writer.writerow(fields)
+
+        writer.writerow(row)
 
 def run_mattersim_error_test(atoms, num_parts, num_mp):
     benchmark_energy = []
@@ -112,8 +119,6 @@ def run_mattersim_error_test(atoms, num_parts, num_mp):
         result_energy.append(result["energy"])
         result_forces.append(result["forces"])
         result_times.append(result["times"])
-        
-        torch.cuda.empty_cache()
 
     result_energy = np.mean(result_energy)
     result_forces = np.mean(result_forces, axis=0)
@@ -137,40 +142,20 @@ def run_mattersim_error_test(atoms, num_parts, num_mp):
         np.mean(result_times)
     ]
     
-    return row
+    file_exists = os.path.isfile(MATTERSIM_RESULTS)
+
+    with open(MATTERSIM_RESULTS, 'a') as csvfile:
+        writer = csv.writer(csvfile)
+
+        if not file_exists:
+            writer.writerow(fields)
+
+        writer.writerow(row)
         
-elements = ['C', 'H', 'O', 'N']
+for x in range(1, MAX_SUPERCELL_DIM):
+    for y in range(x, x + 2):
+        for mp in mp_list:
+            atoms = read(ATOMS_FILE)
+            atoms = make_supercell(atoms, ((x, 0, 0), (0, y, 0), (0, 0, y)))
 
-def create_random_atoms(num_atoms, density=0.1):
-    volume = num_atoms / density
-    box_size = volume**(1/3)
-    
-    positions = np.random.rand(num_atoms, 3) * box_size
-    symbols = np.random.choice(elements, size=num_atoms)
-    return Atoms(symbols=symbols, positions=positions, cell=[box_size, box_size, box_size], pbc=True)
-
-        
-for num_atoms in range(1000, 70000, 5000):
-    suitable_mp = mp_list.copy()
-    if num_atoms > 30000:
-        suitable_mp = [mp for mp in mp_list if mp <= 5]  # Limit MP for large systems
-    for mp in suitable_mp:
-        for _ in range(5):
-            atoms = create_random_atoms(num_atoms)
-
-            orb_results = run_orb_error_test(atoms, NUM_PARTITIONS, mp)
-            file_exists = os.path.isfile(ORB_RESULTS)
-            with open(ORB_RESULTS, 'a') as csvfile:
-                writer = csv.writer(csvfile)
-                if not file_exists:
-                    writer.writerow(fields)
-                writer.writerow(orb_results + [1])
-            
-            mattersim_results = run_mattersim_error_test(atoms, NUM_PARTITIONS, mp)
-            file_exists = os.path.isfile(MATTERSIM_RESULTS)
-            with open(MATTERSIM_RESULTS, 'a') as csvfile:
-                writer = csv.writer(csvfile)
-                if not file_exists:
-                    writer.writerow(fields)
-                writer.writerow(mattersim_results + [1])
-                    
+            run_orb_error_test(atoms, NUM_PARTITIONS, mp)

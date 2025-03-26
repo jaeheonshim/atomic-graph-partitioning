@@ -69,7 +69,11 @@ class AtomicPartitionInference:
             parts = partitioned_atoms[i:i+parts_per_batch]
             input_graph = [self.model_adapter.atoms_to_graph(part) for part in parts]
 
-            part_embeddings = self.model_adapter.forward_graph(input_graph, list(range(i, i + len(input_graph))))
+            try:
+                part_embeddings = self.model_adapter.forward_graph(input_graph, list(range(i, i + len(input_graph))))
+            except torch.OutOfMemoryError as e:
+                print(e)
+                print(torch.cuda.memory_summary(device=None, abbreviated=False))
 
             for j in range(0, len(part_embeddings)):
                 reverse_indices = indices_map[i+j]
