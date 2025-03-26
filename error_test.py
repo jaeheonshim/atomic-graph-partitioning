@@ -22,8 +22,8 @@ ORB_RESULTS = "results/test/orb_results.csv"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 ATOMS_FILE = "datasets/test.xyz"
-MAX_SUPERCELL_DIM = 7
-NUM_PARTITIONS = 20
+MAX_SUPERCELL_DIM = 4
+NUM_PARTITIONS = 60
 mp_list = [2,3,4,5,6,7,8]
 
 MATTERSIM_ITERATIONS = 10 # Mattersim is a little weird so I will run multiple times and average

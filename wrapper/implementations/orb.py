@@ -30,7 +30,7 @@ class OrbModelAdapter(AtomicModelAdapter[AtomGraphs]):
             weight_init=ref.coefficients, trainable=True
         ).to(self.device)
 
-        base = get_base()
+        base = get_base(num_message_passing_steps=4)
 
         model = GraphRegressor(
             graph_head=EnergyHead(

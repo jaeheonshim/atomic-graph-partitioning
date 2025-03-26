@@ -44,20 +44,19 @@ class AtomicPartitionInference:
         partition_roots = [] # Roots of each partition (True if root, False if not)
 
         for i, part in enumerate(extended_partition_set):
-            current_partition = []
             current_indices_map = []
 
             for atom_index in part:
-                current_partition.append(atoms[atom_index])
                 current_indices_map.append(atom_index)
 
-            partitioned_atoms.append(ase.Atoms(current_partition, cell=atoms.cell, pbc=atoms.pbc)) # It's important to pass atoms.cell and atoms.pbc here
+            partitioned_atoms.append(atoms[list(part)])
             indices_map.append(current_indices_map)
             partition_roots.append([j in partition_set[i] for j in current_indices_map])
 
         self.model_adapter.init_partition(atoms, indices_map, partition_roots)
-
-        print(f"Partitioning complete! Created {num_partitions} partitions")
+        
+        partition_sizes = [len(part) for part in extended_partition_set]
+        print(f"Partitioning complete! Created {num_partitions} partitions. Average size of partition: {np.mean(partition_sizes)}")
 
         ### Graph Regressor
         print("Starting inference...")

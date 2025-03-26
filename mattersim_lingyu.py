@@ -16,7 +16,7 @@ import argparse
 
 from tqdm import tqdm
 
-from partitioner import part_graph_extended
+from wrapper.partitioner import part_graph_extended
 import networkx as nx
 
 
@@ -26,7 +26,7 @@ parser.add_argument("--desired_partitions", type=int, default=20)
 parser.add_argument("--num_message_passing", type=int, default=3)
 parser.add_argument("--expected_unit_size", type=int, default=5000)
 parser.add_argument("--num_samples", type=int, default=20)
-parser.add_argument("--device", type=str, default="cuda:2")
+parser.add_argument("--device", type=str, default="cuda")
 args = parser.parse_args()
 
 MODEL=args.model
