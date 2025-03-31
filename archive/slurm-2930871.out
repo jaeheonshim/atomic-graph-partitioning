@@ -1,44 +1,0 @@
----------------------------------------
-Begin Slurm Prolog: Feb-26-2025 01:39:58
-Job ID:    2930871
-User ID:   jshim87
-Account:   gts-vfung3
-Job name:  MattersimRunner
-Partition: gpu-h200
-QOS:       inferno
----------------------------------------
-/storage/home/hcoda1/7/jshim87/.conda/envs/graph_partitioning/lib/python3.11/site-packages/orb_models/forcefield/pretrained.py:71: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
-  state_dict = torch.load(local_path, map_location="cpu")
-/storage/home/hcoda1/7/jshim87/atomic-graph-partitioning/wrapper/implementations/mattersim.py:221: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
-  checkpoint = torch.load(load_path, map_location=device)
-Loading the pre-trained mattersim-v1.0.0-1M.pth model
-  0%|          | 0/10 [00:00<?, ?it/s] 10%|█         | 1/10 [00:02<00:18,  2.04s/it] 20%|██        | 2/10 [00:04<00:16,  2.04s/it] 30%|███       | 3/10 [00:06<00:14,  2.04s/it] 40%|████      | 4/10 [00:08<00:12,  2.04s/it] 50%|█████     | 5/10 [00:10<00:10,  2.04s/it] 60%|██████    | 6/10 [00:12<00:08,  2.05s/it] 70%|███████   | 7/10 [00:14<00:06,  2.05s/it] 80%|████████  | 8/10 [00:16<00:04,  2.04s/it] 90%|█████████ | 9/10 [00:18<00:02,  2.04s/it]100%|██████████| 10/10 [00:20<00:00,  2.04s/it]100%|██████████| 10/10 [00:20<00:00,  2.04s/it]
-  0%|          | 0/10 [00:00<?, ?it/s] 10%|█         | 1/10 [00:02<00:18,  2.08s/it] 20%|██        | 2/10 [00:04<00:16,  2.07s/it] 30%|███       | 3/10 [00:06<00:14,  2.07s/it] 40%|████      | 4/10 [00:08<00:12,  2.06s/it] 50%|█████     | 5/10 [00:10<00:10,  2.05s/it] 60%|██████    | 6/10 [00:12<00:08,  2.05s/it] 70%|███████   | 7/10 [00:14<00:06,  2.05s/it] 80%|████████  | 8/10 [00:16<00:04,  2.04s/it] 90%|█████████ | 9/10 [00:18<00:02,  2.04s/it]100%|██████████| 10/10 [00:20<00:00,  2.04s/it]100%|██████████| 10/10 [00:20<00:00,  2.05s/it]
-  0%|          | 0/10 [00:00<?, ?it/s] 10%|█         | 1/10 [00:02<00:20,  2.27s/it] 20%|██        | 2/10 [00:04<00:17,  2.23s/it] 30%|███       | 3/10 [00:06<00:15,  2.15s/it] 40%|████      | 4/10 [00:08<00:12,  2.10s/it] 50%|█████     | 5/10 [00:10<00:10,  2.08s/it] 60%|██████    | 6/10 [00:12<00:08,  2.07s/it] 70%|███████   | 7/10 [00:14<00:06,  2.07s/it] 80%|████████  | 8/10 [00:16<00:04,  2.06s/it] 90%|█████████ | 9/10 [00:18<00:02,  2.06s/it]100%|██████████| 10/10 [00:20<00:00,  2.05s/it]100%|██████████| 10/10 [00:20<00:00,  2.08s/it]
-  0%|          | 0/10 [00:00<?, ?it/s] 10%|█         | 1/10 [00:02<00:18,  2.04s/it] 20%|██        | 2/10 [00:04<00:16,  2.05s/it] 30%|███       | 3/10 [00:06<00:14,  2.05s/it] 40%|████      | 4/10 [00:08<00:12,  2.05s/it] 50%|█████     | 5/10 [00:10<00:10,  2.05s/it] 60%|██████    | 6/10 [00:12<00:08,  2.05s/it] 70%|███████   | 7/10 [00:14<00:06,  2.04s/it] 80%|████████  | 8/10 [00:16<00:04,  2.04s/it] 90%|█████████ | 9/10 [00:18<00:02,  2.04s/it]100%|██████████| 10/10 [00:20<00:00,  2.04s/it]100%|██████████| 10/10 [00:20<00:00,  2.04s/it]
-[32m2025-02-26 01:41:38.872[0m | [1mINFO    [0m | [36mmattersim.forcefield.potential[0m:[36mfrom_checkpoint[0m:[36m877[0m - [1mLoading the pre-trained mattersim-v1.0.0-1M.pth model[0m
-/storage/home/hcoda1/7/jshim87/.conda/envs/graph_partitioning/lib/python3.11/site-packages/mattersim/forcefield/potential.py:896: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
-  checkpoint = torch.load(load_path, map_location=device)
-[32m2025-02-26 01:41:41.147[0m | [1mINFO    [0m | [36mmattersim.forcefield.potential[0m:[36mfrom_checkpoint[0m:[36m877[0m - [1mLoading the pre-trained mattersim-v1.0.0-1M.pth model[0m
-[32m2025-02-26 01:41:41.283[0m | [1mINFO    [0m | [36mmattersim.forcefield.potential[0m:[36mfrom_checkpoint[0m:[36m877[0m - [1mLoading the pre-trained mattersim-v1.0.0-1M.pth model[0m
-[32m2025-02-26 01:41:42.162[0m | [1mINFO    [0m | [36mmattersim.forcefield.potential[0m:[36mfrom_checkpoint[0m:[36m877[0m - [1mLoading the pre-trained mattersim-v1.0.0-1M.pth model[0m
-[32m2025-02-26 01:41:42.250[0m | [1mINFO    [0m | [36mmattersim.forcefield.potential[0m:[36mfrom_checkpoint[0m:[36m877[0m - [1mLoading the pre-trained mattersim-v1.0.0-1M.pth model[0m
-[32m2025-02-26 01:41:42.554[0m | [1mINFO    [0m | [36mmattersim.forcefield.potential[0m:[36mfrom_checkpoint[0m:[36m877[0m - [1mLoading the pre-trained mattersim-v1.0.0-1M.pth model[0m
-[32m2025-02-26 01:41:42.639[0m | [1mINFO    [0m | [36mmattersim.forcefield.potential[0m:[36mfrom_checkpoint[0m:[36m877[0m - [1mLoading the pre-trained mattersim-v1.0.0-1M.pth model[0m
-[32m2025-02-26 01:41:42.723[0m | [1mINFO    [0m | [36mmattersim.forcefield.potential[0m:[36mfrom_checkpoint[0m:[36m877[0m - [1mLoading the pre-trained mattersim-v1.0.0-1M.pth model[0m
-[32m2025-02-26 01:41:42.808[0m | [1mINFO    [0m | [36mmattersim.forcefield.potential[0m:[36mfrom_checkpoint[0m:[36m877[0m - [1mLoading the pre-trained mattersim-v1.0.0-1M.pth model[0m
-[32m2025-02-26 01:41:42.894[0m | [1mINFO    [0m | [36mmattersim.forcefield.potential[0m:[36mfrom_checkpoint[0m:[36m877[0m - [1mLoading the pre-trained mattersim-v1.0.0-1M.pth model[0m
-  0%|          | 0/10 [00:00<?, ?it/s] 10%|█         | 1/10 [00:00<00:08,  1.04it/s]/var/lib/slurm/slurmd/job2930871/slurm_script: line 8: 3267773 Killed                  python error_test.py
-slurmstepd: error: Detected 1 oom_kill event in StepId=2930871.batch. Some of the step tasks have been OOM Killed.
----------------------------------------
-Begin Slurm Epilog: Feb-26-2025 01:41:45
-Job ID:        2930871
-User ID:       jshim87
-Account:       gts-vfung3
-Job name:      MattersimRunner
-Resources:     cpu=1,gres/gpu:h200=1,mem=4G,node=1
-Rsrc Used:     cput=00:01:48,vmem=0,walltime=00:01:48,mem=4168360K,energy_used=0
-Partition:     gpu-h200
-QOS:           inferno
-Nodes:         atl1-1-01-007-7-0
----------------------------------------
