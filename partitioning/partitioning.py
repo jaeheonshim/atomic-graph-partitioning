@@ -7,35 +7,35 @@ import metis
 from sklearn.cluster import SpectralClustering
 
 def descendants_at_distance_multisource(G, sources, distance=None):
-        if sources in G:
-            sources = [sources]
+    if sources in G:
+        sources = [sources]
 
-        queue = deque(sources)
-        depths = deque([0 for _ in queue])
-        visited = set(sources)
+    queue = deque(sources)
+    depths = deque([0 for _ in queue])
+    visited = set(sources)
 
-        for source in queue:
-            if source not in G:
-                raise nx.NetworkXError(f"The node {source} is not in the graph.")
+    for source in queue:
+        if source not in G:
+            raise nx.NetworkXError(f"The node {source} is not in the graph.")
 
-        while queue:
-            node = queue[0]
-            depth = depths[0]
+    while queue:
+        node = queue[0]
+        depth = depths[0]
 
-            if distance is not None and depth > distance: return
+        if distance is not None and depth > distance: return
 
-            yield queue[0]
+        yield queue[0]
 
-            queue.popleft()
-            depths.popleft()
+        queue.popleft()
+        depths.popleft()
 
-            for child in G[node]:
-                if child not in visited:
-                    visited.add(child)
-                    queue.append(child)
-                    depths.append(depth + 1)
+        for child in G[node]:
+            if child not in visited:
+                visited.add(child)
+                queue.append(child)
+                depths.append(depth + 1)
 
-def part_metis(atoms, G, desired_partitions, distance=None) -> tuple[list[set], list[set]]:
+def part_metis(atoms, G, desired_partitions, distance=1) -> tuple[list[set], list[set]]:
     _, parts = metis.part_graph(G, desired_partitions, objtype="cut")
     partition_map = {node: parts[i] for i, node in enumerate(G.nodes())}
     num_partitions = desired_partitions
@@ -117,10 +117,13 @@ def part_grid(atoms, G, desired_partitions, distance=None):
     partitions = [[] for _ in range(granularity ** 3)]
 
     scaled = np.mod(positions, 1.0)
+    
+    x_min, y_min, z_min = np.min(scaled, axis=0)
+    x_max, y_max, z_max = np.max(scaled, axis=0)
 
-    x_bins = np.linspace(0, 1, granularity + 1)
-    y_bins = np.linspace(0, 1, granularity + 1)
-    z_bins = np.linspace(0, 1, granularity + 1)
+    x_bins = np.linspace(x_min, x_max, granularity + 1)
+    y_bins = np.linspace(y_min, y_max, granularity + 1)
+    z_bins = np.linspace(z_min, z_max, granularity + 1)
 
     for i in range(num_nodes):
         x_idx = np.mod(np.digitize(scaled[i][0], x_bins) - 1, granularity)
