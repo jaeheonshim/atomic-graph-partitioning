@@ -23,22 +23,20 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import wandb
 
-from orb_models.forcefield.atomic_system import ase_atoms_to_atom_graphs
-from mattersim.datasets.utils.convertor import GraphConvertor
-
-mattersim_converter = GraphConvertor("m3gnet", 5.0, True, 4.0)
-
 def get_connectivity(atoms: Atoms, cutoff: float) -> tuple[np.ndarray, np.ndarray]:
-    graph = ase_atoms_to_atom_graphs(atoms)
-    senders = graph.senders
-    receivers = graph.receivers
-    edge_feats = graph.edge_features
-
-    src_indices = senders
-    dst_indices = receivers
+    cart_coords = np.array(atoms.get_positions())
+    lattice_matrix = np.array(atoms.get_cell())
+    pbc = np.array(atoms.pbc, dtype=int)
+    src_indices, dst_indices, images, distances = find_points_in_spheres(
+        cart_coords, cart_coords, r=cutoff, pbc=pbc, lattice=lattice_matrix, tol=1e-8
+    )
+    exclude_self_loop_mask = src_indices != dst_indices
+    src_indices = src_indices[exclude_self_loop_mask]
+    dst_indices = dst_indices[exclude_self_loop_mask]
+    distances = distances[exclude_self_loop_mask]
     
     edge_indices = np.vstack((src_indices, dst_indices))
-    edge_lengths = edge_feats
+    edge_lengths = distances
     return edge_indices, edge_lengths
 
 def BFS_extension(
@@ -48,7 +46,7 @@ def BFS_extension(
     mp_steps: int,
 ) -> list[list[int]]:
     
-    def descendants_at_distance_multisource(G, sources, mp_steps=1):
+    def descendants_at_distance_multisource(G, sources, mp_steps=None):
         if isinstance(sources, int):
             sources = [sources]
     
@@ -158,10 +156,10 @@ def metis_partition(
 ) -> list[list[int]]:
     # Create a graph from the edge indices and lengths
     graph = nx.Graph()
-    graph.add_nodes_from(range(num_nodes))
     src_indices = edge_indices[0]
     dst_indices = edge_indices[1]
     edges = [(src, dst) for src, dst in zip(src_indices, dst_indices)]
+    graph.add_nodes_from(list(range(num_nodes)))
     graph.add_edges_from(edges)
     
     # Use METIS to partition the graph
@@ -366,7 +364,7 @@ def main(args_dict: dict):
             time1 = time.time()
             partitions = metis_partition(num_nodes, edge_indices, num_partitions)
             time2 = time.time()
-            extended_partitions = BFS_extension(num_nodes, edge_indices, partitions, mp_steps)
+            extended_partitions = new_BFS_extension(num_nodes, edge_indices, partitions, mp_steps)
             metis_bfs_times.append(time.time() - time2)
             metis_times.append(time.time() - time1)
             parted_atoms = partition_atoms(atoms, extended_partitions)
@@ -389,7 +387,7 @@ def main(args_dict: dict):
             time1 = time.time()
             partitions = louvain_partition(num_nodes, edge_indices, num_partitions)
             time2 = time.time()
-            extended_partitions = BFS_extension(num_nodes, edge_indices, partitions, mp_steps)
+            extended_partitions = new_BFS_extension(num_nodes, edge_indices, partitions, mp_steps)
             louvain_bfs_times.append(time.time() - time2)
             louvain_times.append(time.time() - time1)
             parted_atoms = partition_atoms(atoms, extended_partitions)
@@ -408,7 +406,7 @@ def main(args_dict: dict):
             time1 = time.time()
             partitions = ldg_partition(num_nodes, edge_indices, num_partitions)
             time2 = time.time()
-            extended_partitions = BFS_extension(num_nodes, edge_indices, partitions, mp_steps)
+            extended_partitions = new_BFS_extension(num_nodes, edge_indices, partitions, mp_steps)
             ldg_bfs_times.append(time.time() - time2)
             ldg_times.append(time.time() - time1)
             parted_atoms = partition_atoms(atoms, extended_partitions)
@@ -430,7 +428,7 @@ def main(args_dict: dict):
             time1 = time.time()
             partitions = spectral_partition(num_nodes, edge_indices, num_partitions)
             time2 = time.time()
-            extended_partitions = BFS_extension(num_nodes, edge_indices, partitions, mp_steps)
+            extended_partitions = new_BFS_extension(num_nodes, edge_indices, partitions, mp_steps)
             spectral_bfs_times.append(time.time() - time2)
             spectral_times.append(time.time() - time1)
             parted_atoms = partition_atoms(atoms, extended_partitions)
@@ -450,7 +448,7 @@ def main(args_dict: dict):
             scaled_positions = np.array(atoms.get_scaled_positions())
             partitions = grid_partition(num_nodes, scaled_positions, granularity)
             time2 = time.time()
-            extended_partitions = BFS_extension(num_nodes, edge_indices, partitions, mp_steps)
+            extended_partitions = new_BFS_extension(num_nodes, edge_indices, partitions, mp_steps)
             grid_bfs_times.append(time.time() - time2)
             grid_times.append(time.time() - time1)
             parted_atoms = partition_atoms(atoms, extended_partitions)
