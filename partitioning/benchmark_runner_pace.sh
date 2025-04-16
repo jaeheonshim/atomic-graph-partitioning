@@ -11,5 +11,5 @@ python benchmark_materials.py \
     --chunk_index $SLURM_ARRAY_TASK_ID \
     --chunk_size 10 \
     --material_list material_ids_rand_subset.csv \
-    --num_atoms 200000 \
+    --num_atoms 1000000 \
     --output results/chunk_$SLURM_ARRAY_TASK_ID 
