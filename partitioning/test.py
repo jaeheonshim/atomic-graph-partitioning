@@ -1,29 +1,58 @@
-from wrapper import partitioner
-from partitioning import part_metis_unweighted
 import networkx as nx
+import cProfile
+import random
+import timeit
+import matplotlib.pyplot as plt
 
-graph = [
-    [1, 2, 5],          # Node 0 connected to 1, 2, 5
-    [0, 2, 3, 4],       # Node 1 connected to 0, 2, 3, 4
-    [0, 1, 3, 5, 6],    # Node 2 connected to 0, 1, 3, 5, 6
-    [1, 2, 4, 6, 7],    # Node 3 connected to 1, 2, 4, 6, 7
-    [1, 3, 7],          # Node 4 connected to 1, 3, 7
-    [0, 2, 6],          # Node 5 connected to 0, 2, 6
-    [2, 3, 5, 7],       # Node 6 connected to 2, 3, 5, 7
-    [3, 4, 6]           # Node 7 connected to 3, 4, 6
-]
+from wrapper.partitioner import part_graph_kway_extended as optim_part
 
-G = nx.Graph()
+def networkx_to_metis_adjlist(G):    
+    n = G.number_of_nodes()
+    adjlist = [[] for _ in range(n)]
+    
+    for u, v, data in G.edges(data=True):
+        adjlist[u].append(v)
 
-G.add_nodes_from(range(len(graph)))
-for u, neighbors in enumerate(graph):
-    for v in neighbors:
-        G.add_edge(u, v)
+    return adjlist
 
-G = nx.Graph(G)
+def create_random_graph(n, p):
+    G = nx.erdos_renyi_graph(n=n, p=p)
+        
+    return G
 
-original_partitions = part_metis_unweighted(None, G, 2, distance=1)
-wrapper_partitions = partitioner.part_graph_kway_extended(graph, 2, distance=1)
 
-print(original_partitions)
-print(wrapper_partitions)
+def benchmark_optim_one_trial(n, p, parts, dist):
+    G = create_random_graph(n, p)
+    adjlist = networkx_to_metis_adjlist(G)
+    
+    start = timeit.default_timer()
+    optim_part(adjlist, parts, distance=dist)
+    stop = timeit.default_timer()
+    
+    return stop - start
+
+# %% [markdown]
+# Profiling
+
+# %%
+# def profile_run():
+#     benchmark_adjlist_one_trial(10000, 0.3, 5, 4)
+
+# cProfile.run('profile_run()', 'adj_part.prof')
+
+# %%
+sizes = []
+optim_time = []
+
+size = 64
+
+while True:
+    time3 = benchmark_optim_one_trial(size, 0.3, 5, 4)
+    
+    sizes.append(size)
+    optim_time.append(time3)
+    
+    print(size, time3)
+    
+    size *= 2
+

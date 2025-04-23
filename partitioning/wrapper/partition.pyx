@@ -14,7 +14,6 @@ cdef struct METIS_Graph:
     idx_t* vsize
     idx_t* adjwgt
 
-
 cdef int _c_adjlist_to_metis(
     METIS_Graph* graph,
     idx_t* xadj_input,
@@ -142,17 +141,17 @@ cdef void _c_descendants_at_distance_multisource(
 cdef int _c_part_graph_kway_extended(
     vector[vector[idx_t]]& result,
     vector[idx_t]& flat_part_result,
-    int nparts,
-    idx_t* xadj_input,          # Starting index in adjncy_input for each vertex
-    idx_t* adjncy_input,        # Flattened adjacency information
-    size_t n,                   # The total number of vertices
-    size_t m,                   # The total number of edges
-    idx_t* vwgt_input=NULL,     # Optional vertex weights
-    idx_t* vsize_input=NULL,    # Optional vertex sizes
-    idx_t* adjwgt_input=NULL,   # Optional edge weights
-    idx_t ncon=1,               # Number of constraints
-    real_t* tpwgts_ptr=NULL,    # Target weights
-    real_t ubvec_val=1.03,       # Balance constraint factor,
+    idx_t nparts,  # Changed from int to idx_t
+    idx_t* xadj_input,
+    idx_t* adjncy_input,
+    size_t n,
+    size_t m,
+    idx_t* vwgt_input=NULL,
+    idx_t* vsize_input=NULL,
+    idx_t* adjwgt_input=NULL,
+    idx_t ncon=1,
+    real_t* tpwgts_ptr=NULL,
+    real_t ubvec_val=1.03,
     int distance=0
 ):
     cdef idx_t _edgecut = 0
@@ -162,7 +161,18 @@ cdef int _c_part_graph_kway_extended(
         return -1
     
     cdef idx_t* part = <idx_t*>malloc(n * sizeof(idx_t))
-    cdef int initial_part_result = metis.METIS_PartGraphKway(
+    if part == NULL:
+        free(graph.xadj)
+        free(graph.adjncy)
+        if graph.vwgt != NULL:
+            free(graph.vwgt)
+        if graph.vsize != NULL:
+            free(graph.vsize)
+        if graph.adjwgt != NULL:
+            free(graph.adjwgt)
+        return -1
+        
+    cdef int metis_result = metis.METIS_PartGraphKway(
         &graph.nvtxs,
         &graph.ncon,
         graph.xadj,
@@ -178,6 +188,21 @@ cdef int _c_part_graph_kway_extended(
         part
     )
 
+    # Check if METIS call was successful
+    if metis_result != METIS_OK:
+        # Clean up and return error
+        free(part)
+        free(graph.xadj)
+        free(graph.adjncy)
+        if graph.vwgt != NULL:
+            free(graph.vwgt)
+        if graph.vsize != NULL:
+            free(graph.vsize)
+        if graph.adjwgt != NULL:
+            free(graph.adjwgt)
+        return metis_result
+
+    # Only proceed if METIS call was successful
     for i in range(n):
         flat_part_result.push_back(part[i])
 
