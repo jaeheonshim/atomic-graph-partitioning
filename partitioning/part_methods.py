@@ -159,8 +159,8 @@ def metis_partition(
     src_indices = edge_indices[0]
     dst_indices = edge_indices[1]
     edges = [(src, dst) for src, dst in zip(src_indices, dst_indices)]
-    graph.add_nodes_from(list(range(num_nodes)))
     graph.add_edges_from(edges)
+    graph.add_nodes_from(list(range(num_nodes)))
     
     # Use METIS to partition the graph
     _, partition_indices = metis.part_graph(graph, nparts=num_partitions, objtype="cut")
