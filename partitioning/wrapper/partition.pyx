@@ -1,6 +1,7 @@
-from . cimport metis
-from .metis cimport idx_t, real_t, METIS_OK, METIS_ERROR_INPUT, METIS_ERROR_MEMORY, METIS_ERROR
+cimport metis
+from metis cimport idx_t, real_t, METIS_OK, METIS_ERROR_INPUT, METIS_ERROR_MEMORY, METIS_ERROR
 from libc.stdlib cimport malloc, free
+from libc.string cimport memset
 from libcpp.vector cimport vector
 from libcpp.deque cimport deque
 
@@ -156,6 +157,7 @@ cdef int _c_part_graph_kway_extended(
 ):
     cdef idx_t _edgecut = 0
     cdef METIS_Graph graph
+    memset(&graph, 0, sizeof(METIS_Graph))
     if _c_adjlist_to_metis(&graph, xadj_input, adjncy_input, n, m, vwgt_input, vsize_input, adjwgt_input, ncon) < 0:
         return -1
     
@@ -190,6 +192,8 @@ cdef int _c_part_graph_kway_extended(
         free(graph.vsize)
     if graph.adjwgt != NULL:
         free(graph.adjwgt)
+
+    return 0
 
 
 def part_graph_kway_extended(list adjlist, int nparts, list nodew=None, list nodesz=None, 
@@ -278,7 +282,6 @@ def part_graph_kway_extended(list adjlist, int nparts, list nodew=None, list nod
             vsize[i] = nodesz[i]
     
     if not has_weights:
-        free(adjwgt)
         adjwgt = NULL
     
     cdef real_t* tpwgts_ptr = NULL
