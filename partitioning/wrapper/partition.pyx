@@ -1,6 +1,8 @@
 cimport metis
 from metis cimport idx_t, real_t, METIS_OK, METIS_ERROR_INPUT, METIS_ERROR_MEMORY, METIS_ERROR
 from libc.stdlib cimport malloc, free
+from libcpp.vector cimport vector
+from libcpp.deque cimport deque
 
 cdef struct METIS_Graph:
     idx_t nvtxs
@@ -91,9 +93,55 @@ cdef METIS_Graph _c_adjlist_to_metis(
     return graph
 
 
-cdef void _c_descendants_at_distance_multisource(G, sources, distance=None):
+cdef void _c_descendants_at_distance_multisource(
+    int nparts,
+    idx_t* xadj_input,
+    idx_t* adjncy_input,
+    size_t n,
+    idx_t* part,
+    vector[vector[idx_t]]& result,
+    int distance=0
+):
+    cdef deque[idx_t] queue
+    cdef deque[int] depths
+    cdef vector[bint] visited = vector[bint](n, False)
+    cdef idx_t node
+    cdef int d
+    cdef vector[idx_t] current
+    
+    for i in range(nparts):
+        current = vector[idx_t]()
+        visited.assign(n, False)
+
+        for j in range(n):
+            if part[j] == i:
+                queue.push_back(j)
+                depths.push_back(0)
+
+        while not queue.empty():
+            node = queue.front()
+            d = depths.front()
+
+            queue.pop_front()
+            depths.pop_front()
+
+            if distance != -1 and d > distance:
+                continue
+            
+            current.push_back(node)
+
+            for j in range(xadj_input[node], xadj_input[node + 1]):
+                child = adjncy_input[j]
+                if not visited[child]:
+                    visited[child] = True
+                    queue.push_back(child)
+                    depths.push_back(d + 1)
+
+        result.push_back(current)
 
 cdef void _c_part_graph_kway_extended(
+    vector[vector[idx_t]]& result,
+    vector[idx_t]& flat_part_result,
     int nparts,
     idx_t* xadj_input,          # Starting index in adjncy_input for each vertex
     idx_t* adjncy_input,        # Flattened adjacency information
@@ -104,15 +152,13 @@ cdef void _c_part_graph_kway_extended(
     idx_t* adjwgt_input=NULL,   # Optional edge weights
     idx_t ncon=1,               # Number of constraints
     real_t* tpwgts_ptr=NULL,    # Target weights
-    real_t ubvec_val=1.03       # Balance constraint factor
+    real_t ubvec_val=1.03,       # Balance constraint factor,
+    int distance=0
 ):
     cdef idx_t _edgecut = 0
-
     cdef METIS_Graph graph = _c_adjlist_to_metis(xadj_input, adjncy_input, n, m, vwgt_input, vsize_input, adjwgt_input, ncon)
-
     cdef idx_t* part = <idx_t*>malloc(n * sizeof(idx_t))
-
-    cdef int result = metis.METIS_PartGraphKway(
+    cdef int initial_part_result = metis.METIS_PartGraphKway(
         &graph.nvtxs,
         &graph.ncon,
         graph.xadj,
@@ -128,16 +174,24 @@ cdef void _c_part_graph_kway_extended(
         part
     )
 
-    print('Result: ' + str(result))
-
-    cdef size_t i
     for i in range(n):
-        print(part[i])
+        flat_part_result.push_back(part[i])
 
-    pass
+    _c_descendants_at_distance_multisource(nparts, xadj_input, adjncy_input, n, part, result, distance)
+    
+    free(part)
+    free(graph.xadj)
+    free(graph.adjncy)
+    if graph.vwgt != NULL:
+        free(graph.vwgt)
+    if graph.vsize != NULL:
+        free(graph.vsize)
+    if graph.adjwgt != NULL:
+        free(graph.adjwgt)
+
 
 def part_graph_kway_extended(list adjlist, int nparts, list nodew=None, list nodesz=None, 
-                            list tpwgts=None, float ubvec_val=1.03):
+                            list tpwgts=None, float ubvec_val=1.03, int distance=0):
     cdef size_t n = len(adjlist)
     cdef size_t m = 0
     cdef size_t i, j, e
@@ -243,10 +297,20 @@ def part_graph_kway_extended(list adjlist, int nparts, list nodew=None, list nod
         for i in range(nparts * ncon):
             tpwgts_ptr[i] = tpwgts[i]
     
+    cdef vector[vector[idx_t]] result
+    cdef vector[idx_t] flat_part_result
     _c_part_graph_kway_extended(
+        result,
+        flat_part_result,
         nparts, xadj, adjncy, n, m, vwgt, vsize, adjwgt, 
-        ncon, tpwgts_ptr, ubvec_val
+        ncon, tpwgts_ptr, ubvec_val, distance
     )
+
+    for i in range(result.size()):
+        print(f"Partition {i}:")
+        for j in range(result[i].size()):
+            print(f"  {result[i][j]}", end=" ")
+        print()
     
     # Free allocated memory
     free(xadj)
@@ -259,3 +323,20 @@ def part_graph_kway_extended(list adjlist, int nparts, list nodew=None, list nod
         free(vsize)
     if tpwgts_ptr != NULL:
         free(tpwgts_ptr)
+
+    cdef list core_partitions = [set() for _ in range(nparts)]
+    for i in range(flat_part_result.size()):
+        core_partitions[flat_part_result[i]].add(i)
+
+    cdef list extended_partitions = []
+    cdef set group
+    cdef idx_t val
+
+    for i in range(result.size()):
+        group = set()
+        for j in range(result[i].size()):
+            val = result[i][j]
+            group.add(val)
+        extended_partitions.append(group)
+
+    return core_partitions, extended_partitions

@@ -14,7 +14,8 @@ extensions = [
         include_dirs=[np.get_include(), metis_include_dir],
         library_dirs=[metis_lib_dir],
         libraries=["metis"],  # Link with libmetis
-        language="c"
+        language="c++",
+        extra_compile_args=["-std=c++17"],
     )
 ]
 

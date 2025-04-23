@@ -5,7 +5,7 @@
     "distutils": {
         "depends": [],
         "include_dirs": [
-            "/storage/home/hcoda1/7/jshim87/.conda/envs/graph_partitioning/lib/python3.11/site-packages/numpy/core/include",
+            "/opt/anaconda3/envs/orb-partitioning/lib/python3.10/site-packages/numpy/core/include",
             "/usr/local/include"
         ],
         "language": "c",
@@ -1246,6 +1246,26 @@ static CYTHON_INLINE float __PYX_NAN() {
 #include "metis.h"
 #include <string.h>
 #include <stdlib.h>
+#include "ios"
+#include "new"
+#include "stdexcept"
+#include "typeinfo"
+#include <vector>
+#include <deque>
+#include <utility>
+
+    #if __cplusplus >= 201103L || (defined(_MSC_VER) && _MSC_VER >= 1600)
+    // move should be defined for these versions of MSVC, but __cplusplus isn't set usefully
+    #include <type_traits>
+
+    namespace cython_std {
+    template <typename T> typename std::remove_reference<T>::type&& move(T& t) noexcept { return std::move(t); }
+    template <typename T> typename std::remove_reference<T>::type&& move(T&& t) noexcept { return std::move(t); }
+    }
+
+    #endif
+    
+#include <set>
 #ifdef _OPENMP
 #include <omp.h>
 #endif /* _OPENMP */
@@ -1581,10 +1601,11 @@ enum  {
 };
 struct __pyx_t_11partitioner_METIS_Graph;
 struct __pyx_opt_args_11partitioner__c_adjlist_to_metis;
+struct __pyx_opt_args_11partitioner__c_descendants_at_distance_multisource;
 struct __pyx_opt_args_11partitioner__c_part_graph_kway_extended;
 
-/* "partition.pyx":5
- * from libc.stdlib cimport malloc, free
+/* "partition.pyx":8
+ * from libcpp.set cimport set
  * 
  * cdef struct METIS_Graph:             # <<<<<<<<<<<<<<
  *     idx_t nvtxs
@@ -1600,7 +1621,7 @@ struct __pyx_t_11partitioner_METIS_Graph {
   __pyx_t_5metis_idx_t *adjwgt;
 };
 
-/* "partition.pyx":15
+/* "partition.pyx":18
  * 
  * 
  * cdef METIS_Graph _c_adjlist_to_metis(             # <<<<<<<<<<<<<<
@@ -1615,12 +1636,24 @@ struct __pyx_opt_args_11partitioner__c_adjlist_to_metis {
   __pyx_t_5metis_idx_t ncon;
 };
 
-/* "partition.pyx":94
+/* "partition.pyx":96
+ *     return graph
  * 
+ * cdef void _c_descendants_at_distance_multisource(             # <<<<<<<<<<<<<<
+ *     int nparts,
+ *     idx_t* xadj_input,
+ */
+struct __pyx_opt_args_11partitioner__c_descendants_at_distance_multisource {
+  int __pyx_n;
+  PyObject *distance;
+};
+
+/* "partition.pyx":142
+ *         result.push_back(current)
  * 
  * cdef void _c_part_graph_kway_extended(             # <<<<<<<<<<<<<<
+ *     vector[vector[idx_t]]& result,
  *     int nparts,
- *     idx_t* xadj_input,          # Starting index in adjncy_input for each vertex
  */
 struct __pyx_opt_args_11partitioner__c_part_graph_kway_extended {
   int __pyx_n;
@@ -1787,56 +1820,16 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg
 /* RaiseException.proto */
 static void __Pyx_Raise(PyObject *type, PyObject *value, PyObject *tb, PyObject *cause);
 
-/* PyObject_Str.proto */
-#define __Pyx_PyObject_Str(obj)\
-    (likely(PyString_CheckExact(obj)) ? __Pyx_NewRef(obj) : PyObject_Str(obj))
-
-/* PyFunctionFastCall.proto */
-#if CYTHON_FAST_PYCALL
-#if !CYTHON_VECTORCALL
-#define __Pyx_PyFunction_FastCall(func, args, nargs)\
-    __Pyx_PyFunction_FastCallDict((func), (args), (nargs), NULL)
-static PyObject *__Pyx_PyFunction_FastCallDict(PyObject *func, PyObject **args, Py_ssize_t nargs, PyObject *kwargs);
-#endif
-#define __Pyx_BUILD_ASSERT_EXPR(cond)\
-    (sizeof(char [1 - 2*!(cond)]) - 1)
-#ifndef Py_MEMBER_SIZE
-#define Py_MEMBER_SIZE(type, member) sizeof(((type *)0)->member)
-#endif
-#if !CYTHON_VECTORCALL
-#if PY_VERSION_HEX >= 0x03080000
-  #include "frameobject.h"
-#if PY_VERSION_HEX >= 0x030b00a6 && !CYTHON_COMPILING_IN_LIMITED_API && !defined(PYPY_VERSION)
-  #ifndef Py_BUILD_CORE
-    #define Py_BUILD_CORE 1
-  #endif
-  #include "internal/pycore_frame.h"
-#endif
-  #define __Pxy_PyFrame_Initialize_Offsets()
-  #define __Pyx_PyFrame_GetLocalsplus(frame)  ((frame)->f_localsplus)
+/* MoveIfSupported.proto */
+#if CYTHON_USE_CPP_STD_MOVE
+  #include <utility>
+  #define __PYX_STD_MOVE_IF_SUPPORTED(x) std::move(x)
 #else
-  static size_t __pyx_pyframe_localsplus_offset = 0;
-  #include "frameobject.h"
-  #define __Pxy_PyFrame_Initialize_Offsets()\
-    ((void)__Pyx_BUILD_ASSERT_EXPR(sizeof(PyFrameObject) == offsetof(PyFrameObject, f_localsplus) + Py_MEMBER_SIZE(PyFrameObject, f_localsplus)),\
-     (void)(__pyx_pyframe_localsplus_offset = ((size_t)PyFrame_Type.tp_basicsize) - Py_MEMBER_SIZE(PyFrameObject, f_localsplus)))
-  #define __Pyx_PyFrame_GetLocalsplus(frame)\
-    (assert(__pyx_pyframe_localsplus_offset), (PyObject **)(((char *)(frame)) + __pyx_pyframe_localsplus_offset))
-#endif
-#endif
+  #define __PYX_STD_MOVE_IF_SUPPORTED(x) x
 #endif
 
-/* PyObjectCallMethO.proto */
-#if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg);
-#endif
-
-/* PyObjectFastCall.proto */
-#define __Pyx_PyObject_FastCall(func, args, nargs)  __Pyx_PyObject_FastCallDict(func, args, (size_t)(nargs), NULL)
-static CYTHON_INLINE PyObject* __Pyx_PyObject_FastCallDict(PyObject *func, PyObject **args, size_t nargs, PyObject *kwargs);
-
-/* PyObjectCallOneArg.proto */
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg);
+/* PyIntCompare.proto */
+static CYTHON_INLINE int __Pyx_PyInt_BoolNeObjC(PyObject *op1, PyObject *op2, long intval, long inplace);
 
 /* TupleAndListFromArray.proto */
 #if CYTHON_COMPILING_IN_CPYTHON
@@ -1995,6 +1988,94 @@ static int __Pyx__GetException(PyThreadState *tstate, PyObject **type, PyObject 
 #else
 static int __Pyx_GetException(PyObject **type, PyObject **value, PyObject **tb);
 #endif
+
+/* GCCDiagnostics.proto */
+#if !defined(__INTEL_COMPILER) && defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6))
+#define __Pyx_HAS_GCC_DIAGNOSTIC
+#endif
+
+/* BuildPyUnicode.proto */
+static PyObject* __Pyx_PyUnicode_BuildFromAscii(Py_ssize_t ulength, char* chars, int clength,
+                                                int prepend_sign, char padding_char);
+
+/* CIntToPyUnicode.proto */
+static CYTHON_INLINE PyObject* __Pyx_PyUnicode_From_size_t(size_t value, Py_ssize_t width, char padding_char, char format_char);
+
+/* JoinPyUnicode.proto */
+static PyObject* __Pyx_PyUnicode_Join(PyObject* value_tuple, Py_ssize_t value_count, Py_ssize_t result_ulength,
+                                      Py_UCS4 max_char);
+
+/* PyFunctionFastCall.proto */
+#if CYTHON_FAST_PYCALL
+#if !CYTHON_VECTORCALL
+#define __Pyx_PyFunction_FastCall(func, args, nargs)\
+    __Pyx_PyFunction_FastCallDict((func), (args), (nargs), NULL)
+static PyObject *__Pyx_PyFunction_FastCallDict(PyObject *func, PyObject **args, Py_ssize_t nargs, PyObject *kwargs);
+#endif
+#define __Pyx_BUILD_ASSERT_EXPR(cond)\
+    (sizeof(char [1 - 2*!(cond)]) - 1)
+#ifndef Py_MEMBER_SIZE
+#define Py_MEMBER_SIZE(type, member) sizeof(((type *)0)->member)
+#endif
+#if !CYTHON_VECTORCALL
+#if PY_VERSION_HEX >= 0x03080000
+  #include "frameobject.h"
+#if PY_VERSION_HEX >= 0x030b00a6 && !CYTHON_COMPILING_IN_LIMITED_API && !defined(PYPY_VERSION)
+  #ifndef Py_BUILD_CORE
+    #define Py_BUILD_CORE 1
+  #endif
+  #include "internal/pycore_frame.h"
+#endif
+  #define __Pxy_PyFrame_Initialize_Offsets()
+  #define __Pyx_PyFrame_GetLocalsplus(frame)  ((frame)->f_localsplus)
+#else
+  static size_t __pyx_pyframe_localsplus_offset = 0;
+  #include "frameobject.h"
+  #define __Pxy_PyFrame_Initialize_Offsets()\
+    ((void)__Pyx_BUILD_ASSERT_EXPR(sizeof(PyFrameObject) == offsetof(PyFrameObject, f_localsplus) + Py_MEMBER_SIZE(PyFrameObject, f_localsplus)),\
+     (void)(__pyx_pyframe_localsplus_offset = ((size_t)PyFrame_Type.tp_basicsize) - Py_MEMBER_SIZE(PyFrameObject, f_localsplus)))
+  #define __Pyx_PyFrame_GetLocalsplus(frame)\
+    (assert(__pyx_pyframe_localsplus_offset), (PyObject **)(((char *)(frame)) + __pyx_pyframe_localsplus_offset))
+#endif
+#endif
+#endif
+
+/* PyObjectCallMethO.proto */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg);
+#endif
+
+/* PyObjectFastCall.proto */
+#define __Pyx_PyObject_FastCall(func, args, nargs)  __Pyx_PyObject_FastCallDict(func, args, (size_t)(nargs), NULL)
+static CYTHON_INLINE PyObject* __Pyx_PyObject_FastCallDict(PyObject *func, PyObject **args, size_t nargs, PyObject *kwargs);
+
+/* PyObjectCallOneArg.proto */
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg);
+
+/* PyObjectFormatSimple.proto */
+#if CYTHON_COMPILING_IN_PYPY
+    #define __Pyx_PyObject_FormatSimple(s, f) (\
+        likely(PyUnicode_CheckExact(s)) ? (Py_INCREF(s), s) :\
+        PyObject_Format(s, f))
+#elif PY_MAJOR_VERSION < 3
+    #define __Pyx_PyObject_FormatSimple(s, f) (\
+        likely(PyUnicode_CheckExact(s)) ? (Py_INCREF(s), s) :\
+        likely(PyString_CheckExact(s)) ? PyUnicode_FromEncodedObject(s, NULL, "strict") :\
+        PyObject_Format(s, f))
+#elif CYTHON_USE_TYPE_SLOTS
+    #define __Pyx_PyObject_FormatSimple(s, f) (\
+        likely(PyUnicode_CheckExact(s)) ? (Py_INCREF(s), s) :\
+        likely(PyLong_CheckExact(s)) ? PyLong_Type.tp_repr(s) :\
+        likely(PyFloat_CheckExact(s)) ? PyFloat_Type.tp_repr(s) :\
+        PyObject_Format(s, f))
+#else
+    #define __Pyx_PyObject_FormatSimple(s, f) (\
+        likely(PyUnicode_CheckExact(s)) ? (Py_INCREF(s), s) :\
+        PyObject_Format(s, f))
+#endif
+
+/* PyObjectCallNoArg.proto */
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallNoArg(PyObject *func);
 
 /* IncludeStructmemberH.proto */
 #include <structmember.h>
@@ -2198,9 +2279,46 @@ static void __pyx_insert_code_object(int code_line, PyCodeObject* code_object);
 static void __Pyx_AddTraceback(const char *funcname, int c_line,
                                int py_line, const char *filename);
 
-/* GCCDiagnostics.proto */
-#if !defined(__INTEL_COMPILER) && defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6))
-#define __Pyx_HAS_GCC_DIAGNOSTIC
+/* CppExceptionConversion.proto */
+#ifndef __Pyx_CppExn2PyErr
+#include <new>
+#include <typeinfo>
+#include <stdexcept>
+#include <ios>
+static void __Pyx_CppExn2PyErr() {
+  try {
+    if (PyErr_Occurred())
+      ; // let the latest Python exn pass through and ignore the current one
+    else
+      throw;
+  } catch (const std::bad_alloc& exn) {
+    PyErr_SetString(PyExc_MemoryError, exn.what());
+  } catch (const std::bad_cast& exn) {
+    PyErr_SetString(PyExc_TypeError, exn.what());
+  } catch (const std::bad_typeid& exn) {
+    PyErr_SetString(PyExc_TypeError, exn.what());
+  } catch (const std::domain_error& exn) {
+    PyErr_SetString(PyExc_ValueError, exn.what());
+  } catch (const std::invalid_argument& exn) {
+    PyErr_SetString(PyExc_ValueError, exn.what());
+  } catch (const std::ios_base::failure& exn) {
+    PyErr_SetString(PyExc_IOError, exn.what());
+  } catch (const std::out_of_range& exn) {
+    PyErr_SetString(PyExc_IndexError, exn.what());
+  } catch (const std::overflow_error& exn) {
+    PyErr_SetString(PyExc_OverflowError, exn.what());
+  } catch (const std::range_error& exn) {
+    PyErr_SetString(PyExc_ArithmeticError, exn.what());
+  } catch (const std::underflow_error& exn) {
+    PyErr_SetString(PyExc_ArithmeticError, exn.what());
+  } catch (const std::exception& exn) {
+    PyErr_SetString(PyExc_RuntimeError, exn.what());
+  }
+  catch (...)
+  {
+    PyErr_SetString(PyExc_RuntimeError, "Unknown exception");
+  }
+}
 #endif
 
 /* CIntFromPy.proto */
@@ -2246,9 +2364,18 @@ static int __Pyx_InitStrings(__Pyx_StringTabEntry *t);
 
 /* Module declarations from "libc.stdlib" */
 
+/* Module declarations from "libcpp.vector" */
+
+/* Module declarations from "libcpp.deque" */
+
+/* Module declarations from "libcpp.utility" */
+
+/* Module declarations from "libcpp.set" */
+
 /* Module declarations from "partitioner" */
 static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist_to_metis(__pyx_t_5metis_idx_t *, __pyx_t_5metis_idx_t *, size_t, size_t, struct __pyx_opt_args_11partitioner__c_adjlist_to_metis *__pyx_optional_args); /*proto*/
-static void __pyx_f_11partitioner__c_part_graph_kway_extended(int, __pyx_t_5metis_idx_t *, __pyx_t_5metis_idx_t *, size_t, size_t, struct __pyx_opt_args_11partitioner__c_part_graph_kway_extended *__pyx_optional_args); /*proto*/
+static void __pyx_f_11partitioner__c_descendants_at_distance_multisource(int, __pyx_t_5metis_idx_t *, __pyx_t_5metis_idx_t *, size_t, __pyx_t_5metis_idx_t *, std::vector<std::vector<__pyx_t_5metis_idx_t> >  &, struct __pyx_opt_args_11partitioner__c_descendants_at_distance_multisource *__pyx_optional_args); /*proto*/
+static void __pyx_f_11partitioner__c_part_graph_kway_extended(std::vector<std::vector<__pyx_t_5metis_idx_t> >  &, int, __pyx_t_5metis_idx_t *, __pyx_t_5metis_idx_t *, size_t, size_t, struct __pyx_opt_args_11partitioner__c_part_graph_kway_extended *__pyx_optional_args); /*proto*/
 /* #### Code section: typeinfo ### */
 /* #### Code section: before_global_var ### */
 #define __Pyx_MODULE_NAME "partitioner"
@@ -2259,17 +2386,21 @@ int __pyx_module_is_main_partitioner = 0;
 /* #### Code section: global_var ### */
 static PyObject *__pyx_builtin_MemoryError;
 static PyObject *__pyx_builtin_range;
-static PyObject *__pyx_builtin_print;
 static PyObject *__pyx_builtin_TypeError;
 static PyObject *__pyx_builtin_ValueError;
+static PyObject *__pyx_builtin_print;
 /* #### Code section: string_decls ### */
 static const char __pyx_k_e[] = "e";
 static const char __pyx_k_i[] = "i";
 static const char __pyx_k_j[] = "j";
 static const char __pyx_k_m[] = "m";
 static const char __pyx_k_n[] = "n";
-static const char __pyx_k__9[] = "?";
+static const char __pyx_k__7[] = ":";
+static const char __pyx_k__8[] = "  ";
+static const char __pyx_k__9[] = " ";
+static const char __pyx_k__12[] = "?";
 static const char __pyx_k_adj[] = "adj";
+static const char __pyx_k_end[] = "end";
 static const char __pyx_k_item[] = "item";
 static const char __pyx_k_main[] = "__main__";
 static const char __pyx_k_name[] = "__name__";
@@ -2281,15 +2412,16 @@ static const char __pyx_k_nodew[] = "nodew";
 static const char __pyx_k_print[] = "print";
 static const char __pyx_k_range[] = "range";
 static const char __pyx_k_vsize[] = "vsize";
-static const char __pyx_k_Result[] = "Result: ";
 static const char __pyx_k_adjncy[] = "adjncy";
 static const char __pyx_k_adjwgt[] = "adjwgt";
 static const char __pyx_k_nodesz[] = "nodesz";
 static const char __pyx_k_nparts[] = "nparts";
+static const char __pyx_k_result[] = "result";
 static const char __pyx_k_tpwgts[] = "tpwgts";
 static const char __pyx_k_weight[] = "weight";
 static const char __pyx_k_adjlist[] = "adjlist";
 static const char __pyx_k_neighbor[] = "neighbor";
+static const char __pyx_k_Partition[] = "Partition ";
 static const char __pyx_k_TypeError[] = "TypeError";
 static const char __pyx_k_ubvec_val[] = "ubvec_val";
 static const char __pyx_k_ValueError[] = "ValueError";
@@ -2345,6 +2477,14 @@ typedef struct {
   #endif
   #if CYTHON_USE_MODULE_STATE
   #endif
+  #if CYTHON_USE_MODULE_STATE
+  #endif
+  #if CYTHON_USE_MODULE_STATE
+  #endif
+  #if CYTHON_USE_MODULE_STATE
+  #endif
+  #if CYTHON_USE_MODULE_STATE
+  #endif
   PyObject *__pyx_kp_s_Failed_to_allocate_memory_for_ad;
   PyObject *__pyx_kp_s_Failed_to_allocate_memory_for_ad_2;
   PyObject *__pyx_kp_s_Failed_to_allocate_memory_for_tp;
@@ -2352,10 +2492,13 @@ typedef struct {
   PyObject *__pyx_kp_s_Failed_to_allocate_memory_for_vw;
   PyObject *__pyx_kp_s_Failed_to_allocate_memory_for_xa;
   PyObject *__pyx_n_s_MemoryError;
-  PyObject *__pyx_kp_s_Result;
+  PyObject *__pyx_kp_u_Partition;
   PyObject *__pyx_n_s_TypeError;
   PyObject *__pyx_n_s_ValueError;
-  PyObject *__pyx_n_s__9;
+  PyObject *__pyx_n_s__12;
+  PyObject *__pyx_kp_u__7;
+  PyObject *__pyx_kp_u__8;
+  PyObject *__pyx_kp_s__9;
   PyObject *__pyx_n_s_adj;
   PyObject *__pyx_n_s_adjlist;
   PyObject *__pyx_n_s_adjncy;
@@ -2363,6 +2506,7 @@ typedef struct {
   PyObject *__pyx_n_s_asyncio_coroutines;
   PyObject *__pyx_n_s_cline_in_traceback;
   PyObject *__pyx_n_s_e;
+  PyObject *__pyx_n_s_end;
   PyObject *__pyx_n_s_has_weights;
   PyObject *__pyx_n_s_i;
   PyObject *__pyx_n_s_is_coroutine;
@@ -2382,6 +2526,7 @@ typedef struct {
   PyObject *__pyx_n_s_partitioner;
   PyObject *__pyx_n_s_print;
   PyObject *__pyx_n_s_range;
+  PyObject *__pyx_n_s_result;
   PyObject *__pyx_n_s_test;
   PyObject *__pyx_n_s_tpwgts;
   PyObject *__pyx_n_s_tpwgts_ptr;
@@ -2390,14 +2535,16 @@ typedef struct {
   PyObject *__pyx_n_s_vwgt;
   PyObject *__pyx_n_s_weight;
   PyObject *__pyx_n_s_xadj;
+  PyObject *__pyx_int_0;
+  PyObject *__pyx_int_neg_1;
   PyObject *__pyx_tuple_;
   PyObject *__pyx_tuple__2;
   PyObject *__pyx_tuple__3;
   PyObject *__pyx_tuple__4;
   PyObject *__pyx_tuple__5;
   PyObject *__pyx_tuple__6;
-  PyObject *__pyx_tuple__7;
-  PyObject *__pyx_codeobj__8;
+  PyObject *__pyx_tuple__10;
+  PyObject *__pyx_codeobj__11;
 } __pyx_mstate;
 
 #if CYTHON_USE_MODULE_STATE
@@ -2447,10 +2594,13 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_kp_s_Failed_to_allocate_memory_for_vw);
   Py_CLEAR(clear_module_state->__pyx_kp_s_Failed_to_allocate_memory_for_xa);
   Py_CLEAR(clear_module_state->__pyx_n_s_MemoryError);
-  Py_CLEAR(clear_module_state->__pyx_kp_s_Result);
+  Py_CLEAR(clear_module_state->__pyx_kp_u_Partition);
   Py_CLEAR(clear_module_state->__pyx_n_s_TypeError);
   Py_CLEAR(clear_module_state->__pyx_n_s_ValueError);
-  Py_CLEAR(clear_module_state->__pyx_n_s__9);
+  Py_CLEAR(clear_module_state->__pyx_n_s__12);
+  Py_CLEAR(clear_module_state->__pyx_kp_u__7);
+  Py_CLEAR(clear_module_state->__pyx_kp_u__8);
+  Py_CLEAR(clear_module_state->__pyx_kp_s__9);
   Py_CLEAR(clear_module_state->__pyx_n_s_adj);
   Py_CLEAR(clear_module_state->__pyx_n_s_adjlist);
   Py_CLEAR(clear_module_state->__pyx_n_s_adjncy);
@@ -2458,6 +2608,7 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_asyncio_coroutines);
   Py_CLEAR(clear_module_state->__pyx_n_s_cline_in_traceback);
   Py_CLEAR(clear_module_state->__pyx_n_s_e);
+  Py_CLEAR(clear_module_state->__pyx_n_s_end);
   Py_CLEAR(clear_module_state->__pyx_n_s_has_weights);
   Py_CLEAR(clear_module_state->__pyx_n_s_i);
   Py_CLEAR(clear_module_state->__pyx_n_s_is_coroutine);
@@ -2477,6 +2628,7 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_partitioner);
   Py_CLEAR(clear_module_state->__pyx_n_s_print);
   Py_CLEAR(clear_module_state->__pyx_n_s_range);
+  Py_CLEAR(clear_module_state->__pyx_n_s_result);
   Py_CLEAR(clear_module_state->__pyx_n_s_test);
   Py_CLEAR(clear_module_state->__pyx_n_s_tpwgts);
   Py_CLEAR(clear_module_state->__pyx_n_s_tpwgts_ptr);
@@ -2485,14 +2637,16 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_vwgt);
   Py_CLEAR(clear_module_state->__pyx_n_s_weight);
   Py_CLEAR(clear_module_state->__pyx_n_s_xadj);
+  Py_CLEAR(clear_module_state->__pyx_int_0);
+  Py_CLEAR(clear_module_state->__pyx_int_neg_1);
   Py_CLEAR(clear_module_state->__pyx_tuple_);
   Py_CLEAR(clear_module_state->__pyx_tuple__2);
   Py_CLEAR(clear_module_state->__pyx_tuple__3);
   Py_CLEAR(clear_module_state->__pyx_tuple__4);
   Py_CLEAR(clear_module_state->__pyx_tuple__5);
   Py_CLEAR(clear_module_state->__pyx_tuple__6);
-  Py_CLEAR(clear_module_state->__pyx_tuple__7);
-  Py_CLEAR(clear_module_state->__pyx_codeobj__8);
+  Py_CLEAR(clear_module_state->__pyx_tuple__10);
+  Py_CLEAR(clear_module_state->__pyx_codeobj__11);
   return 0;
 }
 #endif
@@ -2520,10 +2674,13 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_kp_s_Failed_to_allocate_memory_for_vw);
   Py_VISIT(traverse_module_state->__pyx_kp_s_Failed_to_allocate_memory_for_xa);
   Py_VISIT(traverse_module_state->__pyx_n_s_MemoryError);
-  Py_VISIT(traverse_module_state->__pyx_kp_s_Result);
+  Py_VISIT(traverse_module_state->__pyx_kp_u_Partition);
   Py_VISIT(traverse_module_state->__pyx_n_s_TypeError);
   Py_VISIT(traverse_module_state->__pyx_n_s_ValueError);
-  Py_VISIT(traverse_module_state->__pyx_n_s__9);
+  Py_VISIT(traverse_module_state->__pyx_n_s__12);
+  Py_VISIT(traverse_module_state->__pyx_kp_u__7);
+  Py_VISIT(traverse_module_state->__pyx_kp_u__8);
+  Py_VISIT(traverse_module_state->__pyx_kp_s__9);
   Py_VISIT(traverse_module_state->__pyx_n_s_adj);
   Py_VISIT(traverse_module_state->__pyx_n_s_adjlist);
   Py_VISIT(traverse_module_state->__pyx_n_s_adjncy);
@@ -2531,6 +2688,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_asyncio_coroutines);
   Py_VISIT(traverse_module_state->__pyx_n_s_cline_in_traceback);
   Py_VISIT(traverse_module_state->__pyx_n_s_e);
+  Py_VISIT(traverse_module_state->__pyx_n_s_end);
   Py_VISIT(traverse_module_state->__pyx_n_s_has_weights);
   Py_VISIT(traverse_module_state->__pyx_n_s_i);
   Py_VISIT(traverse_module_state->__pyx_n_s_is_coroutine);
@@ -2550,6 +2708,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_partitioner);
   Py_VISIT(traverse_module_state->__pyx_n_s_print);
   Py_VISIT(traverse_module_state->__pyx_n_s_range);
+  Py_VISIT(traverse_module_state->__pyx_n_s_result);
   Py_VISIT(traverse_module_state->__pyx_n_s_test);
   Py_VISIT(traverse_module_state->__pyx_n_s_tpwgts);
   Py_VISIT(traverse_module_state->__pyx_n_s_tpwgts_ptr);
@@ -2558,14 +2717,16 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_vwgt);
   Py_VISIT(traverse_module_state->__pyx_n_s_weight);
   Py_VISIT(traverse_module_state->__pyx_n_s_xadj);
+  Py_VISIT(traverse_module_state->__pyx_int_0);
+  Py_VISIT(traverse_module_state->__pyx_int_neg_1);
   Py_VISIT(traverse_module_state->__pyx_tuple_);
   Py_VISIT(traverse_module_state->__pyx_tuple__2);
   Py_VISIT(traverse_module_state->__pyx_tuple__3);
   Py_VISIT(traverse_module_state->__pyx_tuple__4);
   Py_VISIT(traverse_module_state->__pyx_tuple__5);
   Py_VISIT(traverse_module_state->__pyx_tuple__6);
-  Py_VISIT(traverse_module_state->__pyx_tuple__7);
-  Py_VISIT(traverse_module_state->__pyx_codeobj__8);
+  Py_VISIT(traverse_module_state->__pyx_tuple__10);
+  Py_VISIT(traverse_module_state->__pyx_codeobj__11);
   return 0;
 }
 #endif
@@ -2602,6 +2763,14 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #endif
 #if CYTHON_USE_MODULE_STATE
 #endif
+#if CYTHON_USE_MODULE_STATE
+#endif
+#if CYTHON_USE_MODULE_STATE
+#endif
+#if CYTHON_USE_MODULE_STATE
+#endif
+#if CYTHON_USE_MODULE_STATE
+#endif
 #define __pyx_kp_s_Failed_to_allocate_memory_for_ad __pyx_mstate_global->__pyx_kp_s_Failed_to_allocate_memory_for_ad
 #define __pyx_kp_s_Failed_to_allocate_memory_for_ad_2 __pyx_mstate_global->__pyx_kp_s_Failed_to_allocate_memory_for_ad_2
 #define __pyx_kp_s_Failed_to_allocate_memory_for_tp __pyx_mstate_global->__pyx_kp_s_Failed_to_allocate_memory_for_tp
@@ -2609,10 +2778,13 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_kp_s_Failed_to_allocate_memory_for_vw __pyx_mstate_global->__pyx_kp_s_Failed_to_allocate_memory_for_vw
 #define __pyx_kp_s_Failed_to_allocate_memory_for_xa __pyx_mstate_global->__pyx_kp_s_Failed_to_allocate_memory_for_xa
 #define __pyx_n_s_MemoryError __pyx_mstate_global->__pyx_n_s_MemoryError
-#define __pyx_kp_s_Result __pyx_mstate_global->__pyx_kp_s_Result
+#define __pyx_kp_u_Partition __pyx_mstate_global->__pyx_kp_u_Partition
 #define __pyx_n_s_TypeError __pyx_mstate_global->__pyx_n_s_TypeError
 #define __pyx_n_s_ValueError __pyx_mstate_global->__pyx_n_s_ValueError
-#define __pyx_n_s__9 __pyx_mstate_global->__pyx_n_s__9
+#define __pyx_n_s__12 __pyx_mstate_global->__pyx_n_s__12
+#define __pyx_kp_u__7 __pyx_mstate_global->__pyx_kp_u__7
+#define __pyx_kp_u__8 __pyx_mstate_global->__pyx_kp_u__8
+#define __pyx_kp_s__9 __pyx_mstate_global->__pyx_kp_s__9
 #define __pyx_n_s_adj __pyx_mstate_global->__pyx_n_s_adj
 #define __pyx_n_s_adjlist __pyx_mstate_global->__pyx_n_s_adjlist
 #define __pyx_n_s_adjncy __pyx_mstate_global->__pyx_n_s_adjncy
@@ -2620,6 +2792,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_asyncio_coroutines __pyx_mstate_global->__pyx_n_s_asyncio_coroutines
 #define __pyx_n_s_cline_in_traceback __pyx_mstate_global->__pyx_n_s_cline_in_traceback
 #define __pyx_n_s_e __pyx_mstate_global->__pyx_n_s_e
+#define __pyx_n_s_end __pyx_mstate_global->__pyx_n_s_end
 #define __pyx_n_s_has_weights __pyx_mstate_global->__pyx_n_s_has_weights
 #define __pyx_n_s_i __pyx_mstate_global->__pyx_n_s_i
 #define __pyx_n_s_is_coroutine __pyx_mstate_global->__pyx_n_s_is_coroutine
@@ -2639,6 +2812,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_partitioner __pyx_mstate_global->__pyx_n_s_partitioner
 #define __pyx_n_s_print __pyx_mstate_global->__pyx_n_s_print
 #define __pyx_n_s_range __pyx_mstate_global->__pyx_n_s_range
+#define __pyx_n_s_result __pyx_mstate_global->__pyx_n_s_result
 #define __pyx_n_s_test __pyx_mstate_global->__pyx_n_s_test
 #define __pyx_n_s_tpwgts __pyx_mstate_global->__pyx_n_s_tpwgts
 #define __pyx_n_s_tpwgts_ptr __pyx_mstate_global->__pyx_n_s_tpwgts_ptr
@@ -2647,17 +2821,19 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_vwgt __pyx_mstate_global->__pyx_n_s_vwgt
 #define __pyx_n_s_weight __pyx_mstate_global->__pyx_n_s_weight
 #define __pyx_n_s_xadj __pyx_mstate_global->__pyx_n_s_xadj
+#define __pyx_int_0 __pyx_mstate_global->__pyx_int_0
+#define __pyx_int_neg_1 __pyx_mstate_global->__pyx_int_neg_1
 #define __pyx_tuple_ __pyx_mstate_global->__pyx_tuple_
 #define __pyx_tuple__2 __pyx_mstate_global->__pyx_tuple__2
 #define __pyx_tuple__3 __pyx_mstate_global->__pyx_tuple__3
 #define __pyx_tuple__4 __pyx_mstate_global->__pyx_tuple__4
 #define __pyx_tuple__5 __pyx_mstate_global->__pyx_tuple__5
 #define __pyx_tuple__6 __pyx_mstate_global->__pyx_tuple__6
-#define __pyx_tuple__7 __pyx_mstate_global->__pyx_tuple__7
-#define __pyx_codeobj__8 __pyx_mstate_global->__pyx_codeobj__8
+#define __pyx_tuple__10 __pyx_mstate_global->__pyx_tuple__10
+#define __pyx_codeobj__11 __pyx_mstate_global->__pyx_codeobj__11
 /* #### Code section: module_code ### */
 
-/* "partition.pyx":15
+/* "partition.pyx":18
  * 
  * 
  * cdef METIS_Graph _c_adjlist_to_metis(             # <<<<<<<<<<<<<<
@@ -2667,7 +2843,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 
 static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist_to_metis(__pyx_t_5metis_idx_t *__pyx_v_xadj_input, __pyx_t_5metis_idx_t *__pyx_v_adjncy_input, size_t __pyx_v_n, size_t __pyx_v_m, struct __pyx_opt_args_11partitioner__c_adjlist_to_metis *__pyx_optional_args) {
 
-  /* "partition.pyx":20
+  /* "partition.pyx":23
  *     size_t n,
  *     size_t m,
  *     idx_t* vwgt_input=NULL,             # <<<<<<<<<<<<<<
@@ -2676,7 +2852,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
   __pyx_t_5metis_idx_t *__pyx_v_vwgt_input = ((__pyx_t_5metis_idx_t *)NULL);
 
-  /* "partition.pyx":21
+  /* "partition.pyx":24
  *     size_t m,
  *     idx_t* vwgt_input=NULL,
  *     idx_t* vsize_input=NULL,             # <<<<<<<<<<<<<<
@@ -2685,7 +2861,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
   __pyx_t_5metis_idx_t *__pyx_v_vsize_input = ((__pyx_t_5metis_idx_t *)NULL);
 
-  /* "partition.pyx":22
+  /* "partition.pyx":25
  *     idx_t* vwgt_input=NULL,
  *     idx_t* vsize_input=NULL,
  *     idx_t* adjwgt_input=NULL,             # <<<<<<<<<<<<<<
@@ -2727,7 +2903,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
     }
   }
 
-  /* "partition.pyx":27
+  /* "partition.pyx":30
  *     cdef METIS_Graph graph
  * 
  *     cdef idx_t* xadj = <idx_t*>malloc((n+1) * sizeof(idx_t))             # <<<<<<<<<<<<<<
@@ -2736,7 +2912,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
   __pyx_v_xadj = ((__pyx_t_5metis_idx_t *)malloc(((__pyx_v_n + 1) * (sizeof(__pyx_t_5metis_idx_t)))));
 
-  /* "partition.pyx":28
+  /* "partition.pyx":31
  * 
  *     cdef idx_t* xadj = <idx_t*>malloc((n+1) * sizeof(idx_t))
  *     if xadj == NULL:             # <<<<<<<<<<<<<<
@@ -2746,20 +2922,20 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
   __pyx_t_1 = (__pyx_v_xadj == NULL);
   if (unlikely(__pyx_t_1)) {
 
-    /* "partition.pyx":29
+    /* "partition.pyx":32
  *     cdef idx_t* xadj = <idx_t*>malloc((n+1) * sizeof(idx_t))
  *     if xadj == NULL:
  *         raise MemoryError("Failed to allocate memory for xadj")             # <<<<<<<<<<<<<<
  * 
  *     cdef idx_t* adjncy = <idx_t*>malloc(m * sizeof(idx_t))
  */
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 29, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 32, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_Raise(__pyx_t_2, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __PYX_ERR(0, 29, __pyx_L1_error)
+    __PYX_ERR(0, 32, __pyx_L1_error)
 
-    /* "partition.pyx":28
+    /* "partition.pyx":31
  * 
  *     cdef idx_t* xadj = <idx_t*>malloc((n+1) * sizeof(idx_t))
  *     if xadj == NULL:             # <<<<<<<<<<<<<<
@@ -2768,7 +2944,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
   }
 
-  /* "partition.pyx":31
+  /* "partition.pyx":34
  *         raise MemoryError("Failed to allocate memory for xadj")
  * 
  *     cdef idx_t* adjncy = <idx_t*>malloc(m * sizeof(idx_t))             # <<<<<<<<<<<<<<
@@ -2777,7 +2953,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
   __pyx_v_adjncy = ((__pyx_t_5metis_idx_t *)malloc((__pyx_v_m * (sizeof(__pyx_t_5metis_idx_t)))));
 
-  /* "partition.pyx":32
+  /* "partition.pyx":35
  * 
  *     cdef idx_t* adjncy = <idx_t*>malloc(m * sizeof(idx_t))
  *     if adjncy == NULL:             # <<<<<<<<<<<<<<
@@ -2787,7 +2963,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
   __pyx_t_1 = (__pyx_v_adjncy == NULL);
   if (unlikely(__pyx_t_1)) {
 
-    /* "partition.pyx":33
+    /* "partition.pyx":36
  *     cdef idx_t* adjncy = <idx_t*>malloc(m * sizeof(idx_t))
  *     if adjncy == NULL:
  *         free(xadj)             # <<<<<<<<<<<<<<
@@ -2796,20 +2972,20 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
     free(__pyx_v_xadj);
 
-    /* "partition.pyx":34
+    /* "partition.pyx":37
  *     if adjncy == NULL:
  *         free(xadj)
  *         raise MemoryError("Failed to allocate memory for adjncy")             # <<<<<<<<<<<<<<
  * 
  *     cdef size_t i
  */
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 34, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 37, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_Raise(__pyx_t_2, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __PYX_ERR(0, 34, __pyx_L1_error)
+    __PYX_ERR(0, 37, __pyx_L1_error)
 
-    /* "partition.pyx":32
+    /* "partition.pyx":35
  * 
  *     cdef idx_t* adjncy = <idx_t*>malloc(m * sizeof(idx_t))
  *     if adjncy == NULL:             # <<<<<<<<<<<<<<
@@ -2818,7 +2994,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
   }
 
-  /* "partition.pyx":37
+  /* "partition.pyx":40
  * 
  *     cdef size_t i
  *     for i in range(n+1):             # <<<<<<<<<<<<<<
@@ -2830,7 +3006,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
   for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
     __pyx_v_i = __pyx_t_5;
 
-    /* "partition.pyx":38
+    /* "partition.pyx":41
  *     cdef size_t i
  *     for i in range(n+1):
  *         xadj[i] = xadj_input[i]             # <<<<<<<<<<<<<<
@@ -2840,7 +3016,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
     (__pyx_v_xadj[__pyx_v_i]) = (__pyx_v_xadj_input[__pyx_v_i]);
   }
 
-  /* "partition.pyx":40
+  /* "partition.pyx":43
  *         xadj[i] = xadj_input[i]
  * 
  *     for i in range(m):             # <<<<<<<<<<<<<<
@@ -2852,7 +3028,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
   for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
     __pyx_v_i = __pyx_t_5;
 
-    /* "partition.pyx":41
+    /* "partition.pyx":44
  * 
  *     for i in range(m):
  *         adjncy[i] = adjncy_input[i]             # <<<<<<<<<<<<<<
@@ -2862,7 +3038,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
     (__pyx_v_adjncy[__pyx_v_i]) = (__pyx_v_adjncy_input[__pyx_v_i]);
   }
 
-  /* "partition.pyx":43
+  /* "partition.pyx":46
  *         adjncy[i] = adjncy_input[i]
  * 
  *     cdef idx_t* vwgt = NULL             # <<<<<<<<<<<<<<
@@ -2871,7 +3047,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
   __pyx_v_vwgt = NULL;
 
-  /* "partition.pyx":44
+  /* "partition.pyx":47
  * 
  *     cdef idx_t* vwgt = NULL
  *     cdef idx_t* vsize = NULL             # <<<<<<<<<<<<<<
@@ -2880,7 +3056,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
   __pyx_v_vsize = NULL;
 
-  /* "partition.pyx":45
+  /* "partition.pyx":48
  *     cdef idx_t* vwgt = NULL
  *     cdef idx_t* vsize = NULL
  *     cdef idx_t* adjwgt = NULL             # <<<<<<<<<<<<<<
@@ -2889,7 +3065,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
   __pyx_v_adjwgt = NULL;
 
-  /* "partition.pyx":47
+  /* "partition.pyx":50
  *     cdef idx_t* adjwgt = NULL
  * 
  *     if vwgt_input != NULL:             # <<<<<<<<<<<<<<
@@ -2899,7 +3075,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
   __pyx_t_1 = (__pyx_v_vwgt_input != NULL);
   if (__pyx_t_1) {
 
-    /* "partition.pyx":48
+    /* "partition.pyx":51
  * 
  *     if vwgt_input != NULL:
  *         vwgt = <idx_t*>malloc(n * ncon * sizeof(idx_t))             # <<<<<<<<<<<<<<
@@ -2908,7 +3084,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
     __pyx_v_vwgt = ((__pyx_t_5metis_idx_t *)malloc(((__pyx_v_n * __pyx_v_ncon) * (sizeof(__pyx_t_5metis_idx_t)))));
 
-    /* "partition.pyx":49
+    /* "partition.pyx":52
  *     if vwgt_input != NULL:
  *         vwgt = <idx_t*>malloc(n * ncon * sizeof(idx_t))
  *         if vwgt == NULL:             # <<<<<<<<<<<<<<
@@ -2918,7 +3094,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
     __pyx_t_1 = (__pyx_v_vwgt == NULL);
     if (unlikely(__pyx_t_1)) {
 
-      /* "partition.pyx":50
+      /* "partition.pyx":53
  *         vwgt = <idx_t*>malloc(n * ncon * sizeof(idx_t))
  *         if vwgt == NULL:
  *             free(xadj)             # <<<<<<<<<<<<<<
@@ -2927,7 +3103,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
       free(__pyx_v_xadj);
 
-      /* "partition.pyx":51
+      /* "partition.pyx":54
  *         if vwgt == NULL:
  *             free(xadj)
  *             free(adjncy)             # <<<<<<<<<<<<<<
@@ -2936,20 +3112,20 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
       free(__pyx_v_adjncy);
 
-      /* "partition.pyx":52
+      /* "partition.pyx":55
  *             free(xadj)
  *             free(adjncy)
  *             raise MemoryError("Failed to allocate memory for vwgt")             # <<<<<<<<<<<<<<
  * 
  *         for i in range(n * ncon):
  */
-      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 52, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 55, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_Raise(__pyx_t_2, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-      __PYX_ERR(0, 52, __pyx_L1_error)
+      __PYX_ERR(0, 55, __pyx_L1_error)
 
-      /* "partition.pyx":49
+      /* "partition.pyx":52
  *     if vwgt_input != NULL:
  *         vwgt = <idx_t*>malloc(n * ncon * sizeof(idx_t))
  *         if vwgt == NULL:             # <<<<<<<<<<<<<<
@@ -2958,7 +3134,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
     }
 
-    /* "partition.pyx":54
+    /* "partition.pyx":57
  *             raise MemoryError("Failed to allocate memory for vwgt")
  * 
  *         for i in range(n * ncon):             # <<<<<<<<<<<<<<
@@ -2970,7 +3146,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
     for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
       __pyx_v_i = __pyx_t_5;
 
-      /* "partition.pyx":55
+      /* "partition.pyx":58
  * 
  *         for i in range(n * ncon):
  *             vwgt[i] = vwgt_input[i]             # <<<<<<<<<<<<<<
@@ -2980,7 +3156,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
       (__pyx_v_vwgt[__pyx_v_i]) = (__pyx_v_vwgt_input[__pyx_v_i]);
     }
 
-    /* "partition.pyx":47
+    /* "partition.pyx":50
  *     cdef idx_t* adjwgt = NULL
  * 
  *     if vwgt_input != NULL:             # <<<<<<<<<<<<<<
@@ -2989,7 +3165,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
   }
 
-  /* "partition.pyx":57
+  /* "partition.pyx":60
  *             vwgt[i] = vwgt_input[i]
  * 
  *     if vsize_input != NULL:             # <<<<<<<<<<<<<<
@@ -2999,7 +3175,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
   __pyx_t_1 = (__pyx_v_vsize_input != NULL);
   if (__pyx_t_1) {
 
-    /* "partition.pyx":58
+    /* "partition.pyx":61
  * 
  *     if vsize_input != NULL:
  *         vsize = <idx_t*>malloc(n * sizeof(idx_t))             # <<<<<<<<<<<<<<
@@ -3008,7 +3184,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
     __pyx_v_vsize = ((__pyx_t_5metis_idx_t *)malloc((__pyx_v_n * (sizeof(__pyx_t_5metis_idx_t)))));
 
-    /* "partition.pyx":59
+    /* "partition.pyx":62
  *     if vsize_input != NULL:
  *         vsize = <idx_t*>malloc(n * sizeof(idx_t))
  *         if vsize == NULL:             # <<<<<<<<<<<<<<
@@ -3018,7 +3194,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
     __pyx_t_1 = (__pyx_v_vsize == NULL);
     if (__pyx_t_1) {
 
-      /* "partition.pyx":60
+      /* "partition.pyx":63
  *         vsize = <idx_t*>malloc(n * sizeof(idx_t))
  *         if vsize == NULL:
  *             free(xadj)             # <<<<<<<<<<<<<<
@@ -3027,7 +3203,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
       free(__pyx_v_xadj);
 
-      /* "partition.pyx":61
+      /* "partition.pyx":64
  *         if vsize == NULL:
  *             free(xadj)
  *             free(adjncy)             # <<<<<<<<<<<<<<
@@ -3036,7 +3212,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
       free(__pyx_v_adjncy);
 
-      /* "partition.pyx":62
+      /* "partition.pyx":65
  *             free(xadj)
  *             free(adjncy)
  *             if vwgt != NULL:             # <<<<<<<<<<<<<<
@@ -3046,7 +3222,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
       __pyx_t_1 = (__pyx_v_vwgt != NULL);
       if (__pyx_t_1) {
 
-        /* "partition.pyx":63
+        /* "partition.pyx":66
  *             free(adjncy)
  *             if vwgt != NULL:
  *                 free(vwgt)             # <<<<<<<<<<<<<<
@@ -3055,7 +3231,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
         free(__pyx_v_vwgt);
 
-        /* "partition.pyx":62
+        /* "partition.pyx":65
  *             free(xadj)
  *             free(adjncy)
  *             if vwgt != NULL:             # <<<<<<<<<<<<<<
@@ -3064,20 +3240,20 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
       }
 
-      /* "partition.pyx":64
+      /* "partition.pyx":67
  *             if vwgt != NULL:
  *                 free(vwgt)
  *             raise MemoryError("Failed to allocate memory for vsize")             # <<<<<<<<<<<<<<
  * 
  *         for i in range(n):
  */
-      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 64, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 67, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_Raise(__pyx_t_2, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-      __PYX_ERR(0, 64, __pyx_L1_error)
+      __PYX_ERR(0, 67, __pyx_L1_error)
 
-      /* "partition.pyx":59
+      /* "partition.pyx":62
  *     if vsize_input != NULL:
  *         vsize = <idx_t*>malloc(n * sizeof(idx_t))
  *         if vsize == NULL:             # <<<<<<<<<<<<<<
@@ -3086,7 +3262,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
     }
 
-    /* "partition.pyx":66
+    /* "partition.pyx":69
  *             raise MemoryError("Failed to allocate memory for vsize")
  * 
  *         for i in range(n):             # <<<<<<<<<<<<<<
@@ -3098,7 +3274,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
     for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
       __pyx_v_i = __pyx_t_5;
 
-      /* "partition.pyx":67
+      /* "partition.pyx":70
  * 
  *         for i in range(n):
  *             vsize[i] = vsize_input[i]             # <<<<<<<<<<<<<<
@@ -3108,7 +3284,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
       (__pyx_v_vsize[__pyx_v_i]) = (__pyx_v_vsize_input[__pyx_v_i]);
     }
 
-    /* "partition.pyx":57
+    /* "partition.pyx":60
  *             vwgt[i] = vwgt_input[i]
  * 
  *     if vsize_input != NULL:             # <<<<<<<<<<<<<<
@@ -3117,7 +3293,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
   }
 
-  /* "partition.pyx":69
+  /* "partition.pyx":72
  *             vsize[i] = vsize_input[i]
  * 
  *     if adjwgt_input != NULL:             # <<<<<<<<<<<<<<
@@ -3127,7 +3303,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
   __pyx_t_1 = (__pyx_v_adjwgt_input != NULL);
   if (__pyx_t_1) {
 
-    /* "partition.pyx":70
+    /* "partition.pyx":73
  * 
  *     if adjwgt_input != NULL:
  *         adjwgt = <idx_t*>malloc(m * sizeof(idx_t))             # <<<<<<<<<<<<<<
@@ -3136,7 +3312,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
     __pyx_v_adjwgt = ((__pyx_t_5metis_idx_t *)malloc((__pyx_v_m * (sizeof(__pyx_t_5metis_idx_t)))));
 
-    /* "partition.pyx":71
+    /* "partition.pyx":74
  *     if adjwgt_input != NULL:
  *         adjwgt = <idx_t*>malloc(m * sizeof(idx_t))
  *         if adjwgt == NULL:             # <<<<<<<<<<<<<<
@@ -3146,7 +3322,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
     __pyx_t_1 = (__pyx_v_adjwgt == NULL);
     if (__pyx_t_1) {
 
-      /* "partition.pyx":72
+      /* "partition.pyx":75
  *         adjwgt = <idx_t*>malloc(m * sizeof(idx_t))
  *         if adjwgt == NULL:
  *             free(xadj)             # <<<<<<<<<<<<<<
@@ -3155,7 +3331,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
       free(__pyx_v_xadj);
 
-      /* "partition.pyx":73
+      /* "partition.pyx":76
  *         if adjwgt == NULL:
  *             free(xadj)
  *             free(adjncy)             # <<<<<<<<<<<<<<
@@ -3164,7 +3340,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
       free(__pyx_v_adjncy);
 
-      /* "partition.pyx":74
+      /* "partition.pyx":77
  *             free(xadj)
  *             free(adjncy)
  *             if vwgt != NULL:             # <<<<<<<<<<<<<<
@@ -3174,7 +3350,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
       __pyx_t_1 = (__pyx_v_vwgt != NULL);
       if (__pyx_t_1) {
 
-        /* "partition.pyx":75
+        /* "partition.pyx":78
  *             free(adjncy)
  *             if vwgt != NULL:
  *                 free(vwgt)             # <<<<<<<<<<<<<<
@@ -3183,7 +3359,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
         free(__pyx_v_vwgt);
 
-        /* "partition.pyx":74
+        /* "partition.pyx":77
  *             free(xadj)
  *             free(adjncy)
  *             if vwgt != NULL:             # <<<<<<<<<<<<<<
@@ -3192,7 +3368,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
       }
 
-      /* "partition.pyx":76
+      /* "partition.pyx":79
  *             if vwgt != NULL:
  *                 free(vwgt)
  *             if vsize != NULL:             # <<<<<<<<<<<<<<
@@ -3202,7 +3378,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
       __pyx_t_1 = (__pyx_v_vsize != NULL);
       if (__pyx_t_1) {
 
-        /* "partition.pyx":77
+        /* "partition.pyx":80
  *                 free(vwgt)
  *             if vsize != NULL:
  *                 free(vsize)             # <<<<<<<<<<<<<<
@@ -3211,7 +3387,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
         free(__pyx_v_vsize);
 
-        /* "partition.pyx":76
+        /* "partition.pyx":79
  *             if vwgt != NULL:
  *                 free(vwgt)
  *             if vsize != NULL:             # <<<<<<<<<<<<<<
@@ -3220,20 +3396,20 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
       }
 
-      /* "partition.pyx":78
+      /* "partition.pyx":81
  *             if vsize != NULL:
  *                 free(vsize)
  *             raise MemoryError("Failed to allocate memory for adjwgt")             # <<<<<<<<<<<<<<
  * 
  *         for i in range(m):
  */
-      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 78, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 81, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_Raise(__pyx_t_2, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-      __PYX_ERR(0, 78, __pyx_L1_error)
+      __PYX_ERR(0, 81, __pyx_L1_error)
 
-      /* "partition.pyx":71
+      /* "partition.pyx":74
  *     if adjwgt_input != NULL:
  *         adjwgt = <idx_t*>malloc(m * sizeof(idx_t))
  *         if adjwgt == NULL:             # <<<<<<<<<<<<<<
@@ -3242,7 +3418,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
     }
 
-    /* "partition.pyx":80
+    /* "partition.pyx":83
  *             raise MemoryError("Failed to allocate memory for adjwgt")
  * 
  *         for i in range(m):             # <<<<<<<<<<<<<<
@@ -3254,7 +3430,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
     for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
       __pyx_v_i = __pyx_t_5;
 
-      /* "partition.pyx":81
+      /* "partition.pyx":84
  * 
  *         for i in range(m):
  *             adjwgt[i] = adjwgt_input[i]             # <<<<<<<<<<<<<<
@@ -3264,7 +3440,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
       (__pyx_v_adjwgt[__pyx_v_i]) = (__pyx_v_adjwgt_input[__pyx_v_i]);
     }
 
-    /* "partition.pyx":69
+    /* "partition.pyx":72
  *             vsize[i] = vsize_input[i]
  * 
  *     if adjwgt_input != NULL:             # <<<<<<<<<<<<<<
@@ -3273,7 +3449,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
   }
 
-  /* "partition.pyx":83
+  /* "partition.pyx":86
  *             adjwgt[i] = adjwgt_input[i]
  * 
  *     graph.nvtxs = n             # <<<<<<<<<<<<<<
@@ -3282,7 +3458,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
   __pyx_v_graph.nvtxs = __pyx_v_n;
 
-  /* "partition.pyx":84
+  /* "partition.pyx":87
  * 
  *     graph.nvtxs = n
  *     graph.ncon = ncon             # <<<<<<<<<<<<<<
@@ -3291,7 +3467,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
   __pyx_v_graph.ncon = __pyx_v_ncon;
 
-  /* "partition.pyx":85
+  /* "partition.pyx":88
  *     graph.nvtxs = n
  *     graph.ncon = ncon
  *     graph.xadj = xadj             # <<<<<<<<<<<<<<
@@ -3300,7 +3476,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
   __pyx_v_graph.xadj = __pyx_v_xadj;
 
-  /* "partition.pyx":86
+  /* "partition.pyx":89
  *     graph.ncon = ncon
  *     graph.xadj = xadj
  *     graph.adjncy = adjncy             # <<<<<<<<<<<<<<
@@ -3309,7 +3485,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
   __pyx_v_graph.adjncy = __pyx_v_adjncy;
 
-  /* "partition.pyx":87
+  /* "partition.pyx":90
  *     graph.xadj = xadj
  *     graph.adjncy = adjncy
  *     graph.vwgt = vwgt             # <<<<<<<<<<<<<<
@@ -3318,7 +3494,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
   __pyx_v_graph.vwgt = __pyx_v_vwgt;
 
-  /* "partition.pyx":88
+  /* "partition.pyx":91
  *     graph.adjncy = adjncy
  *     graph.vwgt = vwgt
  *     graph.vsize = vsize             # <<<<<<<<<<<<<<
@@ -3327,7 +3503,7 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
   __pyx_v_graph.vsize = __pyx_v_vsize;
 
-  /* "partition.pyx":89
+  /* "partition.pyx":92
  *     graph.vwgt = vwgt
  *     graph.vsize = vsize
  *     graph.adjwgt = adjwgt             # <<<<<<<<<<<<<<
@@ -3336,17 +3512,17 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
  */
   __pyx_v_graph.adjwgt = __pyx_v_adjwgt;
 
-  /* "partition.pyx":91
+  /* "partition.pyx":94
  *     graph.adjwgt = adjwgt
  * 
  *     return graph             # <<<<<<<<<<<<<<
  * 
- * 
+ * cdef void _c_descendants_at_distance_multisource(
  */
   __pyx_r = __pyx_v_graph;
   goto __pyx_L0;
 
-  /* "partition.pyx":15
+  /* "partition.pyx":18
  * 
  * 
  * cdef METIS_Graph _c_adjlist_to_metis(             # <<<<<<<<<<<<<<
@@ -3364,17 +3540,380 @@ static struct __pyx_t_11partitioner_METIS_Graph __pyx_f_11partitioner__c_adjlist
   return __pyx_r;
 }
 
-/* "partition.pyx":94
+/* "partition.pyx":96
+ *     return graph
  * 
- * 
- * cdef void _c_part_graph_kway_extended(             # <<<<<<<<<<<<<<
+ * cdef void _c_descendants_at_distance_multisource(             # <<<<<<<<<<<<<<
  *     int nparts,
- *     idx_t* xadj_input,          # Starting index in adjncy_input for each vertex
+ *     idx_t* xadj_input,
  */
 
-static void __pyx_f_11partitioner__c_part_graph_kway_extended(int __pyx_v_nparts, __pyx_t_5metis_idx_t *__pyx_v_xadj_input, __pyx_t_5metis_idx_t *__pyx_v_adjncy_input, size_t __pyx_v_n, size_t __pyx_v_m, struct __pyx_opt_args_11partitioner__c_part_graph_kway_extended *__pyx_optional_args) {
+static void __pyx_f_11partitioner__c_descendants_at_distance_multisource(int __pyx_v_nparts, __pyx_t_5metis_idx_t *__pyx_v_xadj_input, __pyx_t_5metis_idx_t *__pyx_v_adjncy_input, size_t __pyx_v_n, __pyx_t_5metis_idx_t *__pyx_v_part, std::vector<std::vector<__pyx_t_5metis_idx_t> >  &__pyx_v_result, struct __pyx_opt_args_11partitioner__c_descendants_at_distance_multisource *__pyx_optional_args) {
+  PyObject *__pyx_v_distance = ((PyObject *)__pyx_int_0);
+  std::deque<__pyx_t_5metis_idx_t>  __pyx_v_queue;
+  std::deque<int>  __pyx_v_depths;
+  std::vector<int>  __pyx_v_visited;
+  __pyx_t_5metis_idx_t __pyx_v_node;
+  int __pyx_v_d;
+  std::vector<__pyx_t_5metis_idx_t>  __pyx_v_current;
+  int __pyx_v_i;
+  size_t __pyx_v_j;
+  __pyx_t_5metis_idx_t __pyx_v_child;
+  __Pyx_RefNannyDeclarations
+  std::vector<int>  __pyx_t_1;
+  int __pyx_t_2;
+  int __pyx_t_3;
+  int __pyx_t_4;
+  size_t __pyx_t_5;
+  size_t __pyx_t_6;
+  size_t __pyx_t_7;
+  int __pyx_t_8;
+  int __pyx_t_9;
+  PyObject *__pyx_t_10 = NULL;
+  PyObject *__pyx_t_11 = NULL;
+  __pyx_t_5metis_idx_t __pyx_t_12;
+  __pyx_t_5metis_idx_t __pyx_t_13;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("_c_descendants_at_distance_multisource", 1);
+  if (__pyx_optional_args) {
+    if (__pyx_optional_args->__pyx_n > 0) {
+      __pyx_v_distance = __pyx_optional_args->distance;
+    }
+  }
 
-  /* "partition.pyx":100
+  /* "partition.pyx":107
+ *     cdef deque[idx_t] queue
+ *     cdef deque[int] depths
+ *     cdef vector[bint] visited = vector[bint](n, False)             # <<<<<<<<<<<<<<
+ *     cdef idx_t node
+ *     cdef int d
+ */
+  try {
+    __pyx_t_1 = std::vector<int> (__pyx_v_n, 0);
+  } catch(...) {
+    __Pyx_CppExn2PyErr();
+    __PYX_ERR(0, 107, __pyx_L1_error)
+  }
+  __pyx_v_visited = __PYX_STD_MOVE_IF_SUPPORTED(__pyx_t_1);
+
+  /* "partition.pyx":112
+ *     cdef vector[idx_t] current
+ * 
+ *     for i in range(nparts):             # <<<<<<<<<<<<<<
+ *         current.clear()
+ *         visited.assign(n, False)
+ */
+  __pyx_t_2 = __pyx_v_nparts;
+  __pyx_t_3 = __pyx_t_2;
+  for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
+    __pyx_v_i = __pyx_t_4;
+
+    /* "partition.pyx":113
+ * 
+ *     for i in range(nparts):
+ *         current.clear()             # <<<<<<<<<<<<<<
+ *         visited.assign(n, False)
+ * 
+ */
+    __pyx_v_current.clear();
+
+    /* "partition.pyx":114
+ *     for i in range(nparts):
+ *         current.clear()
+ *         visited.assign(n, False)             # <<<<<<<<<<<<<<
+ * 
+ *         for j in range(n):
+ */
+    __pyx_v_visited.assign(__pyx_v_n, 0);
+
+    /* "partition.pyx":116
+ *         visited.assign(n, False)
+ * 
+ *         for j in range(n):             # <<<<<<<<<<<<<<
+ *             if part[j] == i:
+ *                 queue.push_back(j)
+ */
+    __pyx_t_5 = __pyx_v_n;
+    __pyx_t_6 = __pyx_t_5;
+    for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
+      __pyx_v_j = __pyx_t_7;
+
+      /* "partition.pyx":117
+ * 
+ *         for j in range(n):
+ *             if part[j] == i:             # <<<<<<<<<<<<<<
+ *                 queue.push_back(j)
+ *                 depths.push_back(0)
+ */
+      __pyx_t_8 = ((__pyx_v_part[__pyx_v_j]) == __pyx_v_i);
+      if (__pyx_t_8) {
+
+        /* "partition.pyx":118
+ *         for j in range(n):
+ *             if part[j] == i:
+ *                 queue.push_back(j)             # <<<<<<<<<<<<<<
+ *                 depths.push_back(0)
+ * 
+ */
+        try {
+          __pyx_v_queue.push_back(__pyx_v_j);
+        } catch(...) {
+          __Pyx_CppExn2PyErr();
+          __PYX_ERR(0, 118, __pyx_L1_error)
+        }
+
+        /* "partition.pyx":119
+ *             if part[j] == i:
+ *                 queue.push_back(j)
+ *                 depths.push_back(0)             # <<<<<<<<<<<<<<
+ * 
+ *         while not queue.empty():
+ */
+        try {
+          __pyx_v_depths.push_back(0);
+        } catch(...) {
+          __Pyx_CppExn2PyErr();
+          __PYX_ERR(0, 119, __pyx_L1_error)
+        }
+
+        /* "partition.pyx":117
+ * 
+ *         for j in range(n):
+ *             if part[j] == i:             # <<<<<<<<<<<<<<
+ *                 queue.push_back(j)
+ *                 depths.push_back(0)
+ */
+      }
+    }
+
+    /* "partition.pyx":121
+ *                 depths.push_back(0)
+ * 
+ *         while not queue.empty():             # <<<<<<<<<<<<<<
+ *             node = queue.front()
+ *             d = depths.front()
+ */
+    while (1) {
+      __pyx_t_8 = (!__pyx_v_queue.empty());
+      if (!__pyx_t_8) break;
+
+      /* "partition.pyx":122
+ * 
+ *         while not queue.empty():
+ *             node = queue.front()             # <<<<<<<<<<<<<<
+ *             d = depths.front()
+ * 
+ */
+      __pyx_v_node = __pyx_v_queue.front();
+
+      /* "partition.pyx":123
+ *         while not queue.empty():
+ *             node = queue.front()
+ *             d = depths.front()             # <<<<<<<<<<<<<<
+ * 
+ *             queue.pop_front()
+ */
+      __pyx_v_d = __pyx_v_depths.front();
+
+      /* "partition.pyx":125
+ *             d = depths.front()
+ * 
+ *             queue.pop_front()             # <<<<<<<<<<<<<<
+ *             depths.pop_front()
+ * 
+ */
+      __pyx_v_queue.pop_front();
+
+      /* "partition.pyx":126
+ * 
+ *             queue.pop_front()
+ *             depths.pop_front()             # <<<<<<<<<<<<<<
+ * 
+ *             if distance != -1 and d > distance:
+ */
+      __pyx_v_depths.pop_front();
+
+      /* "partition.pyx":128
+ *             depths.pop_front()
+ * 
+ *             if distance != -1 and d > distance:             # <<<<<<<<<<<<<<
+ *                 continue
+ * 
+ */
+      __pyx_t_9 = (__Pyx_PyInt_BoolNeObjC(__pyx_v_distance, __pyx_int_neg_1, -1L, 0)); if (unlikely((__pyx_t_9 < 0))) __PYX_ERR(0, 128, __pyx_L1_error)
+      if (__pyx_t_9) {
+      } else {
+        __pyx_t_8 = __pyx_t_9;
+        goto __pyx_L11_bool_binop_done;
+      }
+      __pyx_t_10 = __Pyx_PyInt_From_int(__pyx_v_d); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 128, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_10);
+      __pyx_t_11 = PyObject_RichCompare(__pyx_t_10, __pyx_v_distance, Py_GT); __Pyx_XGOTREF(__pyx_t_11); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 128, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+      __pyx_t_9 = __Pyx_PyObject_IsTrue(__pyx_t_11); if (unlikely((__pyx_t_9 < 0))) __PYX_ERR(0, 128, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+      __pyx_t_8 = __pyx_t_9;
+      __pyx_L11_bool_binop_done:;
+      if (__pyx_t_8) {
+
+        /* "partition.pyx":129
+ * 
+ *             if distance != -1 and d > distance:
+ *                 continue             # <<<<<<<<<<<<<<
+ * 
+ *             current.push_back(node)
+ */
+        goto __pyx_L8_continue;
+
+        /* "partition.pyx":128
+ *             depths.pop_front()
+ * 
+ *             if distance != -1 and d > distance:             # <<<<<<<<<<<<<<
+ *                 continue
+ * 
+ */
+      }
+
+      /* "partition.pyx":131
+ *                 continue
+ * 
+ *             current.push_back(node)             # <<<<<<<<<<<<<<
+ * 
+ *             for j in range(xadj_input[node], xadj_input[node + 1]):
+ */
+      try {
+        __pyx_v_current.push_back(__pyx_v_node);
+      } catch(...) {
+        __Pyx_CppExn2PyErr();
+        __PYX_ERR(0, 131, __pyx_L1_error)
+      }
+
+      /* "partition.pyx":133
+ *             current.push_back(node)
+ * 
+ *             for j in range(xadj_input[node], xadj_input[node + 1]):             # <<<<<<<<<<<<<<
+ *                 child = adjncy_input[j]
+ *                 if not visited[child]:
+ */
+      __pyx_t_12 = (__pyx_v_xadj_input[(__pyx_v_node + 1)]);
+      __pyx_t_13 = __pyx_t_12;
+      for (__pyx_t_5 = (__pyx_v_xadj_input[__pyx_v_node]); __pyx_t_5 < __pyx_t_13; __pyx_t_5+=1) {
+        __pyx_v_j = __pyx_t_5;
+
+        /* "partition.pyx":134
+ * 
+ *             for j in range(xadj_input[node], xadj_input[node + 1]):
+ *                 child = adjncy_input[j]             # <<<<<<<<<<<<<<
+ *                 if not visited[child]:
+ *                     visited[child] = True
+ */
+        __pyx_v_child = (__pyx_v_adjncy_input[__pyx_v_j]);
+
+        /* "partition.pyx":135
+ *             for j in range(xadj_input[node], xadj_input[node + 1]):
+ *                 child = adjncy_input[j]
+ *                 if not visited[child]:             # <<<<<<<<<<<<<<
+ *                     visited[child] = True
+ *                     queue.push_back(child)
+ */
+        __pyx_t_8 = (!((__pyx_v_visited[__pyx_v_child]) != 0));
+        if (__pyx_t_8) {
+
+          /* "partition.pyx":136
+ *                 child = adjncy_input[j]
+ *                 if not visited[child]:
+ *                     visited[child] = True             # <<<<<<<<<<<<<<
+ *                     queue.push_back(child)
+ *                     depths.push_back(d + 1)
+ */
+          (__pyx_v_visited[__pyx_v_child]) = 1;
+
+          /* "partition.pyx":137
+ *                 if not visited[child]:
+ *                     visited[child] = True
+ *                     queue.push_back(child)             # <<<<<<<<<<<<<<
+ *                     depths.push_back(d + 1)
+ * 
+ */
+          try {
+            __pyx_v_queue.push_back(__pyx_v_child);
+          } catch(...) {
+            __Pyx_CppExn2PyErr();
+            __PYX_ERR(0, 137, __pyx_L1_error)
+          }
+
+          /* "partition.pyx":138
+ *                     visited[child] = True
+ *                     queue.push_back(child)
+ *                     depths.push_back(d + 1)             # <<<<<<<<<<<<<<
+ * 
+ *         result.push_back(current)
+ */
+          try {
+            __pyx_v_depths.push_back((__pyx_v_d + 1));
+          } catch(...) {
+            __Pyx_CppExn2PyErr();
+            __PYX_ERR(0, 138, __pyx_L1_error)
+          }
+
+          /* "partition.pyx":135
+ *             for j in range(xadj_input[node], xadj_input[node + 1]):
+ *                 child = adjncy_input[j]
+ *                 if not visited[child]:             # <<<<<<<<<<<<<<
+ *                     visited[child] = True
+ *                     queue.push_back(child)
+ */
+        }
+      }
+      __pyx_L8_continue:;
+    }
+
+    /* "partition.pyx":140
+ *                     depths.push_back(d + 1)
+ * 
+ *         result.push_back(current)             # <<<<<<<<<<<<<<
+ * 
+ * cdef void _c_part_graph_kway_extended(
+ */
+    try {
+      __pyx_v_result.push_back(__pyx_v_current);
+    } catch(...) {
+      __Pyx_CppExn2PyErr();
+      __PYX_ERR(0, 140, __pyx_L1_error)
+    }
+  }
+
+  /* "partition.pyx":96
+ *     return graph
+ * 
+ * cdef void _c_descendants_at_distance_multisource(             # <<<<<<<<<<<<<<
+ *     int nparts,
+ *     idx_t* xadj_input,
+ */
+
+  /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_10);
+  __Pyx_XDECREF(__pyx_t_11);
+  __Pyx_AddTraceback("partitioner._c_descendants_at_distance_multisource", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_L0:;
+  __Pyx_RefNannyFinishContext();
+}
+
+/* "partition.pyx":142
+ *         result.push_back(current)
+ * 
+ * cdef void _c_part_graph_kway_extended(             # <<<<<<<<<<<<<<
+ *     vector[vector[idx_t]]& result,
+ *     int nparts,
+ */
+
+static void __pyx_f_11partitioner__c_part_graph_kway_extended(std::vector<std::vector<__pyx_t_5metis_idx_t> >  &__pyx_v_result, int __pyx_v_nparts, __pyx_t_5metis_idx_t *__pyx_v_xadj_input, __pyx_t_5metis_idx_t *__pyx_v_adjncy_input, size_t __pyx_v_n, size_t __pyx_v_m, struct __pyx_opt_args_11partitioner__c_part_graph_kway_extended *__pyx_optional_args) {
+
+  /* "partition.pyx":149
  *     size_t n,                   # The total number of vertices
  *     size_t m,                   # The total number of edges
  *     idx_t* vwgt_input=NULL,     # Optional vertex weights             # <<<<<<<<<<<<<<
@@ -3383,7 +3922,7 @@ static void __pyx_f_11partitioner__c_part_graph_kway_extended(int __pyx_v_nparts
  */
   __pyx_t_5metis_idx_t *__pyx_v_vwgt_input = ((__pyx_t_5metis_idx_t *)NULL);
 
-  /* "partition.pyx":101
+  /* "partition.pyx":150
  *     size_t m,                   # The total number of edges
  *     idx_t* vwgt_input=NULL,     # Optional vertex weights
  *     idx_t* vsize_input=NULL,    # Optional vertex sizes             # <<<<<<<<<<<<<<
@@ -3392,7 +3931,7 @@ static void __pyx_f_11partitioner__c_part_graph_kway_extended(int __pyx_v_nparts
  */
   __pyx_t_5metis_idx_t *__pyx_v_vsize_input = ((__pyx_t_5metis_idx_t *)NULL);
 
-  /* "partition.pyx":102
+  /* "partition.pyx":151
  *     idx_t* vwgt_input=NULL,     # Optional vertex weights
  *     idx_t* vsize_input=NULL,    # Optional vertex sizes
  *     idx_t* adjwgt_input=NULL,   # Optional edge weights             # <<<<<<<<<<<<<<
@@ -3402,7 +3941,7 @@ static void __pyx_f_11partitioner__c_part_graph_kway_extended(int __pyx_v_nparts
   __pyx_t_5metis_idx_t *__pyx_v_adjwgt_input = ((__pyx_t_5metis_idx_t *)NULL);
   __pyx_t_5metis_idx_t __pyx_v_ncon = ((__pyx_t_5metis_idx_t)1);
 
-  /* "partition.pyx":104
+  /* "partition.pyx":153
  *     idx_t* adjwgt_input=NULL,   # Optional edge weights
  *     idx_t ncon=1,               # Number of constraints
  *     real_t* tpwgts_ptr=NULL,    # Target weights             # <<<<<<<<<<<<<<
@@ -3414,20 +3953,12 @@ static void __pyx_f_11partitioner__c_part_graph_kway_extended(int __pyx_v_nparts
   __pyx_t_5metis_idx_t __pyx_v__edgecut;
   struct __pyx_t_11partitioner_METIS_Graph __pyx_v_graph;
   __pyx_t_5metis_idx_t *__pyx_v_part;
-  int __pyx_v_result;
-  size_t __pyx_v_i;
-  __Pyx_RefNannyDeclarations
+  CYTHON_UNUSED int __pyx_v_initial_part_result;
   struct __pyx_t_11partitioner_METIS_Graph __pyx_t_1;
   struct __pyx_opt_args_11partitioner__c_adjlist_to_metis __pyx_t_2;
-  PyObject *__pyx_t_3 = NULL;
-  PyObject *__pyx_t_4 = NULL;
-  size_t __pyx_t_5;
-  size_t __pyx_t_6;
-  size_t __pyx_t_7;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("_c_part_graph_kway_extended", 1);
   if (__pyx_optional_args) {
     if (__pyx_optional_args->__pyx_n > 0) {
       __pyx_v_vwgt_input = __pyx_optional_args->vwgt_input;
@@ -3449,115 +3980,83 @@ static void __pyx_f_11partitioner__c_part_graph_kway_extended(int __pyx_v_nparts
     }
   }
 
-  /* "partition.pyx":107
+  /* "partition.pyx":156
  *     real_t ubvec_val=1.03       # Balance constraint factor
  * ):
  *     cdef idx_t _edgecut = 0             # <<<<<<<<<<<<<<
- * 
- *     # Obtain the METIS_Graph
+ *     cdef METIS_Graph graph = _c_adjlist_to_metis(xadj_input, adjncy_input, n, m, vwgt_input, vsize_input, adjwgt_input, ncon)
+ *     cdef idx_t* part = <idx_t*>malloc(n * sizeof(idx_t))
  */
   __pyx_v__edgecut = 0;
 
-  /* "partition.pyx":110
- * 
- *     # Obtain the METIS_Graph
+  /* "partition.pyx":157
+ * ):
+ *     cdef idx_t _edgecut = 0
  *     cdef METIS_Graph graph = _c_adjlist_to_metis(xadj_input, adjncy_input, n, m, vwgt_input, vsize_input, adjwgt_input, ncon)             # <<<<<<<<<<<<<<
- * 
  *     cdef idx_t* part = <idx_t*>malloc(n * sizeof(idx_t))
+ *     cdef int initial_part_result = metis.METIS_PartGraphKway(
  */
   __pyx_t_2.__pyx_n = 4;
   __pyx_t_2.vwgt_input = __pyx_v_vwgt_input;
   __pyx_t_2.vsize_input = __pyx_v_vsize_input;
   __pyx_t_2.adjwgt_input = __pyx_v_adjwgt_input;
   __pyx_t_2.ncon = __pyx_v_ncon;
-  __pyx_t_1 = __pyx_f_11partitioner__c_adjlist_to_metis(__pyx_v_xadj_input, __pyx_v_adjncy_input, __pyx_v_n, __pyx_v_m, &__pyx_t_2); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 110, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_11partitioner__c_adjlist_to_metis(__pyx_v_xadj_input, __pyx_v_adjncy_input, __pyx_v_n, __pyx_v_m, &__pyx_t_2); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 157, __pyx_L1_error)
   __pyx_v_graph = __pyx_t_1;
 
-  /* "partition.pyx":112
+  /* "partition.pyx":158
+ *     cdef idx_t _edgecut = 0
  *     cdef METIS_Graph graph = _c_adjlist_to_metis(xadj_input, adjncy_input, n, m, vwgt_input, vsize_input, adjwgt_input, ncon)
- * 
  *     cdef idx_t* part = <idx_t*>malloc(n * sizeof(idx_t))             # <<<<<<<<<<<<<<
- * 
- *     cdef int result = metis.METIS_PartGraphKway(
+ *     cdef int initial_part_result = metis.METIS_PartGraphKway(
+ *         &graph.nvtxs,
  */
   __pyx_v_part = ((__pyx_t_5metis_idx_t *)malloc((__pyx_v_n * (sizeof(__pyx_t_5metis_idx_t)))));
 
-  /* "partition.pyx":114
+  /* "partition.pyx":159
+ *     cdef METIS_Graph graph = _c_adjlist_to_metis(xadj_input, adjncy_input, n, m, vwgt_input, vsize_input, adjwgt_input, ncon)
  *     cdef idx_t* part = <idx_t*>malloc(n * sizeof(idx_t))
- * 
- *     cdef int result = metis.METIS_PartGraphKway(             # <<<<<<<<<<<<<<
+ *     cdef int initial_part_result = metis.METIS_PartGraphKway(             # <<<<<<<<<<<<<<
  *         &graph.nvtxs,
  *         &graph.ncon,
  */
-  __pyx_v_result = METIS_PartGraphKway((&__pyx_v_graph.nvtxs), (&__pyx_v_graph.ncon), __pyx_v_graph.xadj, __pyx_v_graph.adjncy, __pyx_v_graph.vwgt, __pyx_v_graph.vsize, __pyx_v_graph.adjwgt, (&__pyx_v_nparts), __pyx_v_tpwgts_ptr, (&__pyx_v_ubvec_val), NULL, (&__pyx_v__edgecut), __pyx_v_part);
+  __pyx_v_initial_part_result = METIS_PartGraphKway((&__pyx_v_graph.nvtxs), (&__pyx_v_graph.ncon), __pyx_v_graph.xadj, __pyx_v_graph.adjncy, __pyx_v_graph.vwgt, __pyx_v_graph.vsize, __pyx_v_graph.adjwgt, (&__pyx_v_nparts), __pyx_v_tpwgts_ptr, (&__pyx_v_ubvec_val), NULL, (&__pyx_v__edgecut), __pyx_v_part);
 
-  /* "partition.pyx":130
+  /* "partition.pyx":175
  *     )
  * 
- *     print('Result: ' + str(result))             # <<<<<<<<<<<<<<
+ *     _c_descendants_at_distance_multisource(nparts, xadj_input, adjncy_input, n, part, result)             # <<<<<<<<<<<<<<
  * 
- *     cdef size_t i
+ *     free(part)
  */
-  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_result); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 130, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyObject_Str(__pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 130, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = PyNumber_Add(__pyx_kp_s_Result, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 130, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyObject_CallOneArg(__pyx_builtin_print, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 130, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_f_11partitioner__c_descendants_at_distance_multisource(__pyx_v_nparts, __pyx_v_xadj_input, __pyx_v_adjncy_input, __pyx_v_n, __pyx_v_part, __pyx_v_result, NULL); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 175, __pyx_L1_error)
 
-  /* "partition.pyx":133
+  /* "partition.pyx":177
+ *     _c_descendants_at_distance_multisource(nparts, xadj_input, adjncy_input, n, part, result)
  * 
- *     cdef size_t i
- *     for i in range(n):             # <<<<<<<<<<<<<<
- *         print(part[i])
+ *     free(part)             # <<<<<<<<<<<<<<
  * 
+ * def part_graph_kway_extended(list adjlist, int nparts, list nodew=None, list nodesz=None,
  */
-  __pyx_t_5 = __pyx_v_n;
-  __pyx_t_6 = __pyx_t_5;
-  for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
-    __pyx_v_i = __pyx_t_7;
+  free(__pyx_v_part);
 
-    /* "partition.pyx":134
- *     cdef size_t i
- *     for i in range(n):
- *         print(part[i])             # <<<<<<<<<<<<<<
- * 
- *     pass
- */
-    __pyx_t_4 = __Pyx_PyInt_From_int((__pyx_v_part[__pyx_v_i])); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 134, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_builtin_print, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 134, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  }
-
-  /* "partition.pyx":94
- * 
+  /* "partition.pyx":142
+ *         result.push_back(current)
  * 
  * cdef void _c_part_graph_kway_extended(             # <<<<<<<<<<<<<<
+ *     vector[vector[idx_t]]& result,
  *     int nparts,
- *     idx_t* xadj_input,          # Starting index in adjncy_input for each vertex
  */
 
   /* function exit code */
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_XDECREF(__pyx_t_4);
   __Pyx_AddTraceback("partitioner._c_part_graph_kway_extended", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_L0:;
-  __Pyx_RefNannyFinishContext();
 }
 
-/* "partition.pyx":138
- *     pass
+/* "partition.pyx":179
+ *     free(part)
  * 
  * def part_graph_kway_extended(list adjlist, int nparts, list nodew=None, list nodesz=None,             # <<<<<<<<<<<<<<
  *                             list tpwgts=None, float ubvec_val=1.03):
@@ -3610,7 +4109,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
     values[2] = __Pyx_Arg_NewRef_FASTCALL(((PyObject*)Py_None));
     values[3] = __Pyx_Arg_NewRef_FASTCALL(((PyObject*)Py_None));
 
-    /* "partition.pyx":139
+    /* "partition.pyx":180
  * 
  * def part_graph_kway_extended(list adjlist, int nparts, list nodew=None, list nodesz=None,
  *                             list tpwgts=None, float ubvec_val=1.03):             # <<<<<<<<<<<<<<
@@ -3643,7 +4142,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[0]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 138, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 179, __pyx_L3_error)
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
@@ -3651,42 +4150,42 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[1]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 138, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 179, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("part_graph_kway_extended", 0, 2, 6, 1); __PYX_ERR(0, 138, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("part_graph_kway_extended", 0, 2, 6, 1); __PYX_ERR(0, 179, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_nodew);
           if (value) { values[2] = __Pyx_Arg_NewRef_FASTCALL(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 138, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 179, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_nodesz);
           if (value) { values[3] = __Pyx_Arg_NewRef_FASTCALL(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 138, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 179, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_tpwgts);
           if (value) { values[4] = __Pyx_Arg_NewRef_FASTCALL(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 138, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 179, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_ubvec_val);
           if (value) { values[5] = __Pyx_Arg_NewRef_FASTCALL(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 138, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 179, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "part_graph_kway_extended") < 0)) __PYX_ERR(0, 138, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "part_graph_kway_extended") < 0)) __PYX_ERR(0, 179, __pyx_L3_error)
       }
     } else {
       switch (__pyx_nargs) {
@@ -3705,19 +4204,19 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
       }
     }
     __pyx_v_adjlist = ((PyObject*)values[0]);
-    __pyx_v_nparts = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_nparts == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 138, __pyx_L3_error)
+    __pyx_v_nparts = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_nparts == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 179, __pyx_L3_error)
     __pyx_v_nodew = ((PyObject*)values[2]);
     __pyx_v_nodesz = ((PyObject*)values[3]);
     __pyx_v_tpwgts = ((PyObject*)values[4]);
     if (values[5]) {
-      __pyx_v_ubvec_val = __pyx_PyFloat_AsFloat(values[5]); if (unlikely((__pyx_v_ubvec_val == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 139, __pyx_L3_error)
+      __pyx_v_ubvec_val = __pyx_PyFloat_AsFloat(values[5]); if (unlikely((__pyx_v_ubvec_val == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 180, __pyx_L3_error)
     } else {
       __pyx_v_ubvec_val = ((float)((double)1.03));
     }
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("part_graph_kway_extended", 0, 2, 6, __pyx_nargs); __PYX_ERR(0, 138, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("part_graph_kway_extended", 0, 2, 6, __pyx_nargs); __PYX_ERR(0, 179, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -3731,14 +4230,14 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_adjlist), (&PyList_Type), 1, "adjlist", 1))) __PYX_ERR(0, 138, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_nodew), (&PyList_Type), 1, "nodew", 1))) __PYX_ERR(0, 138, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_nodesz), (&PyList_Type), 1, "nodesz", 1))) __PYX_ERR(0, 138, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_tpwgts), (&PyList_Type), 1, "tpwgts", 1))) __PYX_ERR(0, 139, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_adjlist), (&PyList_Type), 1, "adjlist", 1))) __PYX_ERR(0, 179, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_nodew), (&PyList_Type), 1, "nodew", 1))) __PYX_ERR(0, 179, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_nodesz), (&PyList_Type), 1, "nodesz", 1))) __PYX_ERR(0, 179, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_tpwgts), (&PyList_Type), 1, "tpwgts", 1))) __PYX_ERR(0, 180, __pyx_L1_error)
   __pyx_r = __pyx_pf_11partitioner_part_graph_kway_extended(__pyx_self, __pyx_v_adjlist, __pyx_v_nparts, __pyx_v_nodew, __pyx_v_nodesz, __pyx_v_tpwgts, __pyx_v_ubvec_val);
 
-  /* "partition.pyx":138
- *     pass
+  /* "partition.pyx":179
+ *     free(part)
  * 
  * def part_graph_kway_extended(list adjlist, int nparts, list nodew=None, list nodesz=None,             # <<<<<<<<<<<<<<
  *                             list tpwgts=None, float ubvec_val=1.03):
@@ -3778,6 +4277,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
   __pyx_t_5metis_idx_t __pyx_v_ncon;
   __pyx_t_5metis_idx_t *__pyx_v_vsize;
   __pyx_t_5metis_real_t *__pyx_v_tpwgts_ptr;
+  std::vector<std::vector<__pyx_t_5metis_idx_t> >  __pyx_v_result;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   Py_ssize_t __pyx_t_1;
@@ -3802,12 +4302,17 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
   __pyx_t_5metis_idx_t __pyx_t_20;
   __pyx_t_5metis_real_t __pyx_t_21;
   struct __pyx_opt_args_11partitioner__c_part_graph_kway_extended __pyx_t_22;
+  std::vector<std::vector<__pyx_t_5metis_idx_t> > ::size_type __pyx_t_23;
+  std::vector<std::vector<__pyx_t_5metis_idx_t> > ::size_type __pyx_t_24;
+  Py_UCS4 __pyx_t_25;
+  std::vector<__pyx_t_5metis_idx_t> ::size_type __pyx_t_26;
+  std::vector<__pyx_t_5metis_idx_t> ::size_type __pyx_t_27;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("part_graph_kway_extended", 1);
 
-  /* "partition.pyx":140
+  /* "partition.pyx":181
  * def part_graph_kway_extended(list adjlist, int nparts, list nodew=None, list nodesz=None,
  *                             list tpwgts=None, float ubvec_val=1.03):
  *     cdef size_t n = len(adjlist)             # <<<<<<<<<<<<<<
@@ -3816,12 +4321,12 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
   if (unlikely(__pyx_v_adjlist == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-    __PYX_ERR(0, 140, __pyx_L1_error)
+    __PYX_ERR(0, 181, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_PyList_GET_SIZE(__pyx_v_adjlist); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 140, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyList_GET_SIZE(__pyx_v_adjlist); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 181, __pyx_L1_error)
   __pyx_v_n = __pyx_t_1;
 
-  /* "partition.pyx":141
+  /* "partition.pyx":182
  *                             list tpwgts=None, float ubvec_val=1.03):
  *     cdef size_t n = len(adjlist)
  *     cdef size_t m = 0             # <<<<<<<<<<<<<<
@@ -3830,25 +4335,25 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
   __pyx_v_m = 0;
 
-  /* "partition.pyx":143
+  /* "partition.pyx":184
  *     cdef size_t m = 0
  *     cdef size_t i, j, e
  *     cdef bint has_weights = False             # <<<<<<<<<<<<<<
  * 
- *     # Calculate total number of edges
+ *     for adj in adjlist:
  */
   __pyx_v_has_weights = 0;
 
-  /* "partition.pyx":146
+  /* "partition.pyx":186
+ *     cdef bint has_weights = False
  * 
- *     # Calculate total number of edges
  *     for adj in adjlist:             # <<<<<<<<<<<<<<
  *         m += len(adj)
  * 
  */
   if (unlikely(__pyx_v_adjlist == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-    __PYX_ERR(0, 146, __pyx_L1_error)
+    __PYX_ERR(0, 186, __pyx_L1_error)
   }
   __pyx_t_2 = __pyx_v_adjlist; __Pyx_INCREF(__pyx_t_2);
   __pyx_t_1 = 0;
@@ -3856,32 +4361,32 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
     {
       Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_2);
       #if !CYTHON_ASSUME_SAFE_MACROS
-      if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 146, __pyx_L1_error)
+      if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 186, __pyx_L1_error)
       #endif
       if (__pyx_t_1 >= __pyx_temp) break;
     }
     #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-    __pyx_t_3 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_1); __Pyx_INCREF(__pyx_t_3); __pyx_t_1++; if (unlikely((0 < 0))) __PYX_ERR(0, 146, __pyx_L1_error)
+    __pyx_t_3 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_1); __Pyx_INCREF(__pyx_t_3); __pyx_t_1++; if (unlikely((0 < 0))) __PYX_ERR(0, 186, __pyx_L1_error)
     #else
-    __pyx_t_3 = __Pyx_PySequence_ITEM(__pyx_t_2, __pyx_t_1); __pyx_t_1++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 146, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PySequence_ITEM(__pyx_t_2, __pyx_t_1); __pyx_t_1++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 186, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     #endif
     __Pyx_XDECREF_SET(__pyx_v_adj, __pyx_t_3);
     __pyx_t_3 = 0;
 
-    /* "partition.pyx":147
- *     # Calculate total number of edges
+    /* "partition.pyx":187
+ * 
  *     for adj in adjlist:
  *         m += len(adj)             # <<<<<<<<<<<<<<
  * 
- *     # Allocate memory manually
+ *     cdef idx_t* xadj = <idx_t*>malloc((n+1) * sizeof(idx_t))
  */
-    __pyx_t_4 = PyObject_Length(__pyx_v_adj); if (unlikely(__pyx_t_4 == ((Py_ssize_t)-1))) __PYX_ERR(0, 147, __pyx_L1_error)
+    __pyx_t_4 = PyObject_Length(__pyx_v_adj); if (unlikely(__pyx_t_4 == ((Py_ssize_t)-1))) __PYX_ERR(0, 187, __pyx_L1_error)
     __pyx_v_m = (__pyx_v_m + __pyx_t_4);
 
-    /* "partition.pyx":146
+    /* "partition.pyx":186
+ *     cdef bint has_weights = False
  * 
- *     # Calculate total number of edges
  *     for adj in adjlist:             # <<<<<<<<<<<<<<
  *         m += len(adj)
  * 
@@ -3889,17 +4394,17 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "partition.pyx":150
+  /* "partition.pyx":189
+ *         m += len(adj)
  * 
- *     # Allocate memory manually
  *     cdef idx_t* xadj = <idx_t*>malloc((n+1) * sizeof(idx_t))             # <<<<<<<<<<<<<<
  *     if xadj == NULL:
  *         raise MemoryError("Failed to allocate memory for xadj")
  */
   __pyx_v_xadj = ((__pyx_t_5metis_idx_t *)malloc(((__pyx_v_n + 1) * (sizeof(__pyx_t_5metis_idx_t)))));
 
-  /* "partition.pyx":151
- *     # Allocate memory manually
+  /* "partition.pyx":190
+ * 
  *     cdef idx_t* xadj = <idx_t*>malloc((n+1) * sizeof(idx_t))
  *     if xadj == NULL:             # <<<<<<<<<<<<<<
  *         raise MemoryError("Failed to allocate memory for xadj")
@@ -3908,21 +4413,21 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
   __pyx_t_5 = (__pyx_v_xadj == NULL);
   if (unlikely(__pyx_t_5)) {
 
-    /* "partition.pyx":152
+    /* "partition.pyx":191
  *     cdef idx_t* xadj = <idx_t*>malloc((n+1) * sizeof(idx_t))
  *     if xadj == NULL:
  *         raise MemoryError("Failed to allocate memory for xadj")             # <<<<<<<<<<<<<<
  * 
  *     cdef idx_t* adjncy = <idx_t*>malloc(m * sizeof(idx_t))
  */
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 152, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 191, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_Raise(__pyx_t_2, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __PYX_ERR(0, 152, __pyx_L1_error)
+    __PYX_ERR(0, 191, __pyx_L1_error)
 
-    /* "partition.pyx":151
- *     # Allocate memory manually
+    /* "partition.pyx":190
+ * 
  *     cdef idx_t* xadj = <idx_t*>malloc((n+1) * sizeof(idx_t))
  *     if xadj == NULL:             # <<<<<<<<<<<<<<
  *         raise MemoryError("Failed to allocate memory for xadj")
@@ -3930,7 +4435,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
   }
 
-  /* "partition.pyx":154
+  /* "partition.pyx":193
  *         raise MemoryError("Failed to allocate memory for xadj")
  * 
  *     cdef idx_t* adjncy = <idx_t*>malloc(m * sizeof(idx_t))             # <<<<<<<<<<<<<<
@@ -3939,7 +4444,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
   __pyx_v_adjncy = ((__pyx_t_5metis_idx_t *)malloc((__pyx_v_m * (sizeof(__pyx_t_5metis_idx_t)))));
 
-  /* "partition.pyx":155
+  /* "partition.pyx":194
  * 
  *     cdef idx_t* adjncy = <idx_t*>malloc(m * sizeof(idx_t))
  *     if adjncy == NULL:             # <<<<<<<<<<<<<<
@@ -3949,7 +4454,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
   __pyx_t_5 = (__pyx_v_adjncy == NULL);
   if (unlikely(__pyx_t_5)) {
 
-    /* "partition.pyx":156
+    /* "partition.pyx":195
  *     cdef idx_t* adjncy = <idx_t*>malloc(m * sizeof(idx_t))
  *     if adjncy == NULL:
  *         free(xadj)             # <<<<<<<<<<<<<<
@@ -3958,20 +4463,20 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
     free(__pyx_v_xadj);
 
-    /* "partition.pyx":157
+    /* "partition.pyx":196
  *     if adjncy == NULL:
  *         free(xadj)
  *         raise MemoryError("Failed to allocate memory for adjncy")             # <<<<<<<<<<<<<<
  * 
  *     cdef idx_t* adjwgt = <idx_t*>malloc(m * sizeof(idx_t))
  */
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 157, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 196, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_Raise(__pyx_t_2, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __PYX_ERR(0, 157, __pyx_L1_error)
+    __PYX_ERR(0, 196, __pyx_L1_error)
 
-    /* "partition.pyx":155
+    /* "partition.pyx":194
  * 
  *     cdef idx_t* adjncy = <idx_t*>malloc(m * sizeof(idx_t))
  *     if adjncy == NULL:             # <<<<<<<<<<<<<<
@@ -3980,7 +4485,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
   }
 
-  /* "partition.pyx":159
+  /* "partition.pyx":198
  *         raise MemoryError("Failed to allocate memory for adjncy")
  * 
  *     cdef idx_t* adjwgt = <idx_t*>malloc(m * sizeof(idx_t))             # <<<<<<<<<<<<<<
@@ -3989,7 +4494,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
   __pyx_v_adjwgt = ((__pyx_t_5metis_idx_t *)malloc((__pyx_v_m * (sizeof(__pyx_t_5metis_idx_t)))));
 
-  /* "partition.pyx":160
+  /* "partition.pyx":199
  * 
  *     cdef idx_t* adjwgt = <idx_t*>malloc(m * sizeof(idx_t))
  *     if adjwgt == NULL:             # <<<<<<<<<<<<<<
@@ -3999,7 +4504,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
   __pyx_t_5 = (__pyx_v_adjwgt == NULL);
   if (unlikely(__pyx_t_5)) {
 
-    /* "partition.pyx":161
+    /* "partition.pyx":200
  *     cdef idx_t* adjwgt = <idx_t*>malloc(m * sizeof(idx_t))
  *     if adjwgt == NULL:
  *         free(xadj)             # <<<<<<<<<<<<<<
@@ -4008,7 +4513,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
     free(__pyx_v_xadj);
 
-    /* "partition.pyx":162
+    /* "partition.pyx":201
  *     if adjwgt == NULL:
  *         free(xadj)
  *         free(adjncy)             # <<<<<<<<<<<<<<
@@ -4017,20 +4522,20 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
     free(__pyx_v_adjncy);
 
-    /* "partition.pyx":163
+    /* "partition.pyx":202
  *         free(xadj)
  *         free(adjncy)
  *         raise MemoryError("Failed to allocate memory for adjwgt")             # <<<<<<<<<<<<<<
  * 
- *     # Fill arrays
+ *     xadj[0] = 0
  */
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 202, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_Raise(__pyx_t_2, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __PYX_ERR(0, 163, __pyx_L1_error)
+    __PYX_ERR(0, 202, __pyx_L1_error)
 
-    /* "partition.pyx":160
+    /* "partition.pyx":199
  * 
  *     cdef idx_t* adjwgt = <idx_t*>malloc(m * sizeof(idx_t))
  *     if adjwgt == NULL:             # <<<<<<<<<<<<<<
@@ -4039,17 +4544,17 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
   }
 
-  /* "partition.pyx":166
+  /* "partition.pyx":204
+ *         raise MemoryError("Failed to allocate memory for adjwgt")
  * 
- *     # Fill arrays
  *     xadj[0] = 0             # <<<<<<<<<<<<<<
  *     e = 0
  * 
  */
   (__pyx_v_xadj[0]) = 0;
 
-  /* "partition.pyx":167
- *     # Fill arrays
+  /* "partition.pyx":205
+ * 
  *     xadj[0] = 0
  *     e = 0             # <<<<<<<<<<<<<<
  * 
@@ -4057,7 +4562,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
   __pyx_v_e = 0;
 
-  /* "partition.pyx":169
+  /* "partition.pyx":207
  *     e = 0
  * 
  *     for i in range(n):             # <<<<<<<<<<<<<<
@@ -4069,7 +4574,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
   for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_7; __pyx_t_8+=1) {
     __pyx_v_i = __pyx_t_8;
 
-    /* "partition.pyx":170
+    /* "partition.pyx":208
  * 
  *     for i in range(n):
  *         adj = adjlist[i]             # <<<<<<<<<<<<<<
@@ -4078,14 +4583,14 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
     if (unlikely(__pyx_v_adjlist == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 170, __pyx_L1_error)
+      __PYX_ERR(0, 208, __pyx_L1_error)
     }
-    __pyx_t_2 = __Pyx_GetItemInt_List(__pyx_v_adjlist, __pyx_v_i, size_t, 0, __Pyx_PyInt_FromSize_t, 1, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 170, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_GetItemInt_List(__pyx_v_adjlist, __pyx_v_i, size_t, 0, __Pyx_PyInt_FromSize_t, 1, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 208, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_XDECREF_SET(__pyx_v_adj, __pyx_t_2);
     __pyx_t_2 = 0;
 
-    /* "partition.pyx":171
+    /* "partition.pyx":209
  *     for i in range(n):
  *         adj = adjlist[i]
  *         for item in adj:             # <<<<<<<<<<<<<<
@@ -4097,9 +4602,9 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
       __pyx_t_1 = 0;
       __pyx_t_9 = NULL;
     } else {
-      __pyx_t_1 = -1; __pyx_t_2 = PyObject_GetIter(__pyx_v_adj); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 171, __pyx_L1_error)
+      __pyx_t_1 = -1; __pyx_t_2 = PyObject_GetIter(__pyx_v_adj); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 209, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
-      __pyx_t_9 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_2); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 171, __pyx_L1_error)
+      __pyx_t_9 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_2); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 209, __pyx_L1_error)
     }
     for (;;) {
       if (likely(!__pyx_t_9)) {
@@ -4107,28 +4612,28 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
           {
             Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_2);
             #if !CYTHON_ASSUME_SAFE_MACROS
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 171, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 209, __pyx_L1_error)
             #endif
             if (__pyx_t_1 >= __pyx_temp) break;
           }
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_3 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_1); __Pyx_INCREF(__pyx_t_3); __pyx_t_1++; if (unlikely((0 < 0))) __PYX_ERR(0, 171, __pyx_L1_error)
+          __pyx_t_3 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_1); __Pyx_INCREF(__pyx_t_3); __pyx_t_1++; if (unlikely((0 < 0))) __PYX_ERR(0, 209, __pyx_L1_error)
           #else
-          __pyx_t_3 = __Pyx_PySequence_ITEM(__pyx_t_2, __pyx_t_1); __pyx_t_1++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 171, __pyx_L1_error)
+          __pyx_t_3 = __Pyx_PySequence_ITEM(__pyx_t_2, __pyx_t_1); __pyx_t_1++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 209, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_3);
           #endif
         } else {
           {
             Py_ssize_t __pyx_temp = __Pyx_PyTuple_GET_SIZE(__pyx_t_2);
             #if !CYTHON_ASSUME_SAFE_MACROS
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 171, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 209, __pyx_L1_error)
             #endif
             if (__pyx_t_1 >= __pyx_temp) break;
           }
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_3 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_1); __Pyx_INCREF(__pyx_t_3); __pyx_t_1++; if (unlikely((0 < 0))) __PYX_ERR(0, 171, __pyx_L1_error)
+          __pyx_t_3 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_1); __Pyx_INCREF(__pyx_t_3); __pyx_t_1++; if (unlikely((0 < 0))) __PYX_ERR(0, 209, __pyx_L1_error)
           #else
-          __pyx_t_3 = __Pyx_PySequence_ITEM(__pyx_t_2, __pyx_t_1); __pyx_t_1++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 171, __pyx_L1_error)
+          __pyx_t_3 = __Pyx_PySequence_ITEM(__pyx_t_2, __pyx_t_1); __pyx_t_1++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 209, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_3);
           #endif
         }
@@ -4138,7 +4643,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
             if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-            else __PYX_ERR(0, 171, __pyx_L1_error)
+            else __PYX_ERR(0, 209, __pyx_L1_error)
           }
           break;
         }
@@ -4147,7 +4652,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
       __Pyx_XDECREF_SET(__pyx_v_item, __pyx_t_3);
       __pyx_t_3 = 0;
 
-      /* "partition.pyx":172
+      /* "partition.pyx":210
  *         adj = adjlist[i]
  *         for item in adj:
  *             try:             # <<<<<<<<<<<<<<
@@ -4163,7 +4668,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
         __Pyx_XGOTREF(__pyx_t_12);
         /*try:*/ {
 
-          /* "partition.pyx":173
+          /* "partition.pyx":211
  *         for item in adj:
  *             try:
  *                 neighbor, weight = item             # <<<<<<<<<<<<<<
@@ -4176,7 +4681,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
             if (unlikely(size != 2)) {
               if (size > 2) __Pyx_RaiseTooManyValuesError(2);
               else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-              __PYX_ERR(0, 173, __pyx_L13_error)
+              __PYX_ERR(0, 211, __pyx_L13_error)
             }
             #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
             if (likely(PyTuple_CheckExact(sequence))) {
@@ -4189,21 +4694,21 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
             __Pyx_INCREF(__pyx_t_3);
             __Pyx_INCREF(__pyx_t_13);
             #else
-            __pyx_t_3 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 173, __pyx_L13_error)
+            __pyx_t_3 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 211, __pyx_L13_error)
             __Pyx_GOTREF(__pyx_t_3);
-            __pyx_t_13 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 173, __pyx_L13_error)
+            __pyx_t_13 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 211, __pyx_L13_error)
             __Pyx_GOTREF(__pyx_t_13);
             #endif
           } else {
             Py_ssize_t index = -1;
-            __pyx_t_14 = PyObject_GetIter(__pyx_v_item); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 173, __pyx_L13_error)
+            __pyx_t_14 = PyObject_GetIter(__pyx_v_item); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 211, __pyx_L13_error)
             __Pyx_GOTREF(__pyx_t_14);
             __pyx_t_15 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_14);
             index = 0; __pyx_t_3 = __pyx_t_15(__pyx_t_14); if (unlikely(!__pyx_t_3)) goto __pyx_L21_unpacking_failed;
             __Pyx_GOTREF(__pyx_t_3);
             index = 1; __pyx_t_13 = __pyx_t_15(__pyx_t_14); if (unlikely(!__pyx_t_13)) goto __pyx_L21_unpacking_failed;
             __Pyx_GOTREF(__pyx_t_13);
-            if (__Pyx_IternextUnpackEndCheck(__pyx_t_15(__pyx_t_14), 2) < 0) __PYX_ERR(0, 173, __pyx_L13_error)
+            if (__Pyx_IternextUnpackEndCheck(__pyx_t_15(__pyx_t_14), 2) < 0) __PYX_ERR(0, 211, __pyx_L13_error)
             __pyx_t_15 = NULL;
             __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
             goto __pyx_L22_unpacking_done;
@@ -4211,7 +4716,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
             __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
             __pyx_t_15 = NULL;
             if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-            __PYX_ERR(0, 173, __pyx_L13_error)
+            __PYX_ERR(0, 211, __pyx_L13_error)
             __pyx_L22_unpacking_done:;
           }
           __Pyx_XDECREF_SET(__pyx_v_neighbor, __pyx_t_3);
@@ -4219,27 +4724,27 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
           __Pyx_XDECREF_SET(__pyx_v_weight, __pyx_t_13);
           __pyx_t_13 = 0;
 
-          /* "partition.pyx":174
+          /* "partition.pyx":212
  *             try:
  *                 neighbor, weight = item
  *                 adjncy[e] = neighbor             # <<<<<<<<<<<<<<
  *                 adjwgt[e] = weight
  *                 has_weights = True
  */
-          __pyx_t_16 = __Pyx_PyInt_As_int(__pyx_v_neighbor); if (unlikely((__pyx_t_16 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 174, __pyx_L13_error)
+          __pyx_t_16 = __Pyx_PyInt_As_int(__pyx_v_neighbor); if (unlikely((__pyx_t_16 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 212, __pyx_L13_error)
           (__pyx_v_adjncy[__pyx_v_e]) = __pyx_t_16;
 
-          /* "partition.pyx":175
+          /* "partition.pyx":213
  *                 neighbor, weight = item
  *                 adjncy[e] = neighbor
  *                 adjwgt[e] = weight             # <<<<<<<<<<<<<<
  *                 has_weights = True
  *             except (TypeError, ValueError):
  */
-          __pyx_t_16 = __Pyx_PyInt_As_int(__pyx_v_weight); if (unlikely((__pyx_t_16 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 175, __pyx_L13_error)
+          __pyx_t_16 = __Pyx_PyInt_As_int(__pyx_v_weight); if (unlikely((__pyx_t_16 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 213, __pyx_L13_error)
           (__pyx_v_adjwgt[__pyx_v_e]) = __pyx_t_16;
 
-          /* "partition.pyx":176
+          /* "partition.pyx":214
  *                 adjncy[e] = neighbor
  *                 adjwgt[e] = weight
  *                 has_weights = True             # <<<<<<<<<<<<<<
@@ -4248,7 +4753,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
           __pyx_v_has_weights = 1;
 
-          /* "partition.pyx":172
+          /* "partition.pyx":210
  *         adj = adjlist[i]
  *         for item in adj:
  *             try:             # <<<<<<<<<<<<<<
@@ -4265,7 +4770,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
         __Pyx_XDECREF(__pyx_t_14); __pyx_t_14 = 0;
         __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-        /* "partition.pyx":177
+        /* "partition.pyx":215
  *                 adjwgt[e] = weight
  *                 has_weights = True
  *             except (TypeError, ValueError):             # <<<<<<<<<<<<<<
@@ -4275,22 +4780,22 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
         __pyx_t_17 = __Pyx_PyErr_ExceptionMatches2(__pyx_builtin_TypeError, __pyx_builtin_ValueError);
         if (__pyx_t_17) {
           __Pyx_AddTraceback("partitioner.part_graph_kway_extended", __pyx_clineno, __pyx_lineno, __pyx_filename);
-          if (__Pyx_GetException(&__pyx_t_13, &__pyx_t_3, &__pyx_t_14) < 0) __PYX_ERR(0, 177, __pyx_L15_except_error)
+          if (__Pyx_GetException(&__pyx_t_13, &__pyx_t_3, &__pyx_t_14) < 0) __PYX_ERR(0, 215, __pyx_L15_except_error)
           __Pyx_XGOTREF(__pyx_t_13);
           __Pyx_XGOTREF(__pyx_t_3);
           __Pyx_XGOTREF(__pyx_t_14);
 
-          /* "partition.pyx":178
+          /* "partition.pyx":216
  *                 has_weights = True
  *             except (TypeError, ValueError):
  *                 adjncy[e] = item             # <<<<<<<<<<<<<<
  *                 adjwgt[e] = 1
  * 
  */
-          __pyx_t_16 = __Pyx_PyInt_As_int(__pyx_v_item); if (unlikely((__pyx_t_16 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 178, __pyx_L15_except_error)
+          __pyx_t_16 = __Pyx_PyInt_As_int(__pyx_v_item); if (unlikely((__pyx_t_16 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 216, __pyx_L15_except_error)
           (__pyx_v_adjncy[__pyx_v_e]) = __pyx_t_16;
 
-          /* "partition.pyx":179
+          /* "partition.pyx":217
  *             except (TypeError, ValueError):
  *                 adjncy[e] = item
  *                 adjwgt[e] = 1             # <<<<<<<<<<<<<<
@@ -4305,7 +4810,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
         }
         goto __pyx_L15_except_error;
 
-        /* "partition.pyx":172
+        /* "partition.pyx":210
  *         adj = adjlist[i]
  *         for item in adj:
  *             try:             # <<<<<<<<<<<<<<
@@ -4326,7 +4831,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
         __pyx_L20_try_end:;
       }
 
-      /* "partition.pyx":181
+      /* "partition.pyx":219
  *                 adjwgt[e] = 1
  * 
  *             e += 1             # <<<<<<<<<<<<<<
@@ -4335,7 +4840,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
       __pyx_v_e = (__pyx_v_e + 1);
 
-      /* "partition.pyx":171
+      /* "partition.pyx":209
  *     for i in range(n):
  *         adj = adjlist[i]
  *         for item in adj:             # <<<<<<<<<<<<<<
@@ -4345,27 +4850,27 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
     }
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "partition.pyx":182
+    /* "partition.pyx":220
  * 
  *             e += 1
  *         xadj[i + 1] = e             # <<<<<<<<<<<<<<
  * 
- *     # Handle vertex weights
+ *     cdef idx_t* vwgt = NULL
  */
     (__pyx_v_xadj[(__pyx_v_i + 1)]) = __pyx_v_e;
   }
 
-  /* "partition.pyx":185
+  /* "partition.pyx":222
+ *         xadj[i + 1] = e
  * 
- *     # Handle vertex weights
  *     cdef idx_t* vwgt = NULL             # <<<<<<<<<<<<<<
  *     cdef idx_t ncon = 1
  * 
  */
   __pyx_v_vwgt = NULL;
 
-  /* "partition.pyx":186
- *     # Handle vertex weights
+  /* "partition.pyx":223
+ * 
  *     cdef idx_t* vwgt = NULL
  *     cdef idx_t ncon = 1             # <<<<<<<<<<<<<<
  * 
@@ -4373,44 +4878,44 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
   __pyx_v_ncon = 1;
 
-  /* "partition.pyx":188
+  /* "partition.pyx":225
  *     cdef idx_t ncon = 1
  * 
  *     if nodew is not None:             # <<<<<<<<<<<<<<
  *         if isinstance(nodew[0], int):
- *             # Single constraint
+ *             vwgt = <idx_t*>malloc(n * sizeof(idx_t))
  */
   __pyx_t_5 = (__pyx_v_nodew != ((PyObject*)Py_None));
   if (__pyx_t_5) {
 
-    /* "partition.pyx":189
+    /* "partition.pyx":226
  * 
  *     if nodew is not None:
  *         if isinstance(nodew[0], int):             # <<<<<<<<<<<<<<
- *             # Single constraint
  *             vwgt = <idx_t*>malloc(n * sizeof(idx_t))
+ *             if vwgt == NULL:
  */
     if (unlikely(__pyx_v_nodew == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 189, __pyx_L1_error)
+      __PYX_ERR(0, 226, __pyx_L1_error)
     }
-    __pyx_t_2 = __Pyx_GetItemInt_List(__pyx_v_nodew, 0, long, 1, __Pyx_PyInt_From_long, 1, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 189, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_GetItemInt_List(__pyx_v_nodew, 0, long, 1, __Pyx_PyInt_From_long, 1, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 226, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __pyx_t_5 = PyInt_Check(__pyx_t_2); 
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     if (__pyx_t_5) {
 
-      /* "partition.pyx":191
+      /* "partition.pyx":227
+ *     if nodew is not None:
  *         if isinstance(nodew[0], int):
- *             # Single constraint
  *             vwgt = <idx_t*>malloc(n * sizeof(idx_t))             # <<<<<<<<<<<<<<
  *             if vwgt == NULL:
  *                 free(xadj)
  */
       __pyx_v_vwgt = ((__pyx_t_5metis_idx_t *)malloc((__pyx_v_n * (sizeof(__pyx_t_5metis_idx_t)))));
 
-      /* "partition.pyx":192
- *             # Single constraint
+      /* "partition.pyx":228
+ *         if isinstance(nodew[0], int):
  *             vwgt = <idx_t*>malloc(n * sizeof(idx_t))
  *             if vwgt == NULL:             # <<<<<<<<<<<<<<
  *                 free(xadj)
@@ -4419,7 +4924,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
       __pyx_t_5 = (__pyx_v_vwgt == NULL);
       if (unlikely(__pyx_t_5)) {
 
-        /* "partition.pyx":193
+        /* "partition.pyx":229
  *             vwgt = <idx_t*>malloc(n * sizeof(idx_t))
  *             if vwgt == NULL:
  *                 free(xadj)             # <<<<<<<<<<<<<<
@@ -4428,7 +4933,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
         free(__pyx_v_xadj);
 
-        /* "partition.pyx":194
+        /* "partition.pyx":230
  *             if vwgt == NULL:
  *                 free(xadj)
  *                 free(adjncy)             # <<<<<<<<<<<<<<
@@ -4437,7 +4942,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
         free(__pyx_v_adjncy);
 
-        /* "partition.pyx":195
+        /* "partition.pyx":231
  *                 free(xadj)
  *                 free(adjncy)
  *                 free(adjwgt)             # <<<<<<<<<<<<<<
@@ -4446,21 +4951,21 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
         free(__pyx_v_adjwgt);
 
-        /* "partition.pyx":196
+        /* "partition.pyx":232
  *                 free(adjncy)
  *                 free(adjwgt)
  *                 raise MemoryError("Failed to allocate memory for vwgt")             # <<<<<<<<<<<<<<
  * 
  *             for i in range(n):
  */
-        __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 196, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 232, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_Raise(__pyx_t_2, 0, 0, 0);
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-        __PYX_ERR(0, 196, __pyx_L1_error)
+        __PYX_ERR(0, 232, __pyx_L1_error)
 
-        /* "partition.pyx":192
- *             # Single constraint
+        /* "partition.pyx":228
+ *         if isinstance(nodew[0], int):
  *             vwgt = <idx_t*>malloc(n * sizeof(idx_t))
  *             if vwgt == NULL:             # <<<<<<<<<<<<<<
  *                 free(xadj)
@@ -4468,7 +4973,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
       }
 
-      /* "partition.pyx":198
+      /* "partition.pyx":234
  *                 raise MemoryError("Failed to allocate memory for vwgt")
  * 
  *             for i in range(n):             # <<<<<<<<<<<<<<
@@ -4480,37 +4985,37 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
       for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_7; __pyx_t_8+=1) {
         __pyx_v_i = __pyx_t_8;
 
-        /* "partition.pyx":199
+        /* "partition.pyx":235
  * 
  *             for i in range(n):
  *                 vwgt[i] = nodew[i]             # <<<<<<<<<<<<<<
  *         else:
- *             # Multiple constraints
+ *             ncon = len(nodew[0])
  */
         if (unlikely(__pyx_v_nodew == Py_None)) {
           PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-          __PYX_ERR(0, 199, __pyx_L1_error)
+          __PYX_ERR(0, 235, __pyx_L1_error)
         }
-        __pyx_t_2 = __Pyx_GetItemInt_List(__pyx_v_nodew, __pyx_v_i, size_t, 0, __Pyx_PyInt_FromSize_t, 1, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 199, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_GetItemInt_List(__pyx_v_nodew, __pyx_v_i, size_t, 0, __Pyx_PyInt_FromSize_t, 1, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 235, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
-        __pyx_t_16 = __Pyx_PyInt_As_int(__pyx_t_2); if (unlikely((__pyx_t_16 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 199, __pyx_L1_error)
+        __pyx_t_16 = __Pyx_PyInt_As_int(__pyx_t_2); if (unlikely((__pyx_t_16 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 235, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
         (__pyx_v_vwgt[__pyx_v_i]) = __pyx_t_16;
       }
 
-      /* "partition.pyx":189
+      /* "partition.pyx":226
  * 
  *     if nodew is not None:
  *         if isinstance(nodew[0], int):             # <<<<<<<<<<<<<<
- *             # Single constraint
  *             vwgt = <idx_t*>malloc(n * sizeof(idx_t))
+ *             if vwgt == NULL:
  */
       goto __pyx_L27;
     }
 
-    /* "partition.pyx":202
+    /* "partition.pyx":237
+ *                 vwgt[i] = nodew[i]
  *         else:
- *             # Multiple constraints
  *             ncon = len(nodew[0])             # <<<<<<<<<<<<<<
  *             vwgt = <idx_t*>malloc(n * ncon * sizeof(idx_t))
  *             if vwgt == NULL:
@@ -4518,16 +5023,16 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
     /*else*/ {
       if (unlikely(__pyx_v_nodew == Py_None)) {
         PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-        __PYX_ERR(0, 202, __pyx_L1_error)
+        __PYX_ERR(0, 237, __pyx_L1_error)
       }
-      __pyx_t_2 = __Pyx_GetItemInt_List(__pyx_v_nodew, 0, long, 1, __Pyx_PyInt_From_long, 1, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 202, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_GetItemInt_List(__pyx_v_nodew, 0, long, 1, __Pyx_PyInt_From_long, 1, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 237, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
-      __pyx_t_1 = PyObject_Length(__pyx_t_2); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 202, __pyx_L1_error)
+      __pyx_t_1 = PyObject_Length(__pyx_t_2); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 237, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       __pyx_v_ncon = __pyx_t_1;
 
-      /* "partition.pyx":203
- *             # Multiple constraints
+      /* "partition.pyx":238
+ *         else:
  *             ncon = len(nodew[0])
  *             vwgt = <idx_t*>malloc(n * ncon * sizeof(idx_t))             # <<<<<<<<<<<<<<
  *             if vwgt == NULL:
@@ -4535,7 +5040,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
       __pyx_v_vwgt = ((__pyx_t_5metis_idx_t *)malloc(((__pyx_v_n * __pyx_v_ncon) * (sizeof(__pyx_t_5metis_idx_t)))));
 
-      /* "partition.pyx":204
+      /* "partition.pyx":239
  *             ncon = len(nodew[0])
  *             vwgt = <idx_t*>malloc(n * ncon * sizeof(idx_t))
  *             if vwgt == NULL:             # <<<<<<<<<<<<<<
@@ -4545,7 +5050,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
       __pyx_t_5 = (__pyx_v_vwgt == NULL);
       if (unlikely(__pyx_t_5)) {
 
-        /* "partition.pyx":205
+        /* "partition.pyx":240
  *             vwgt = <idx_t*>malloc(n * ncon * sizeof(idx_t))
  *             if vwgt == NULL:
  *                 free(xadj)             # <<<<<<<<<<<<<<
@@ -4554,7 +5059,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
         free(__pyx_v_xadj);
 
-        /* "partition.pyx":206
+        /* "partition.pyx":241
  *             if vwgt == NULL:
  *                 free(xadj)
  *                 free(adjncy)             # <<<<<<<<<<<<<<
@@ -4563,7 +5068,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
         free(__pyx_v_adjncy);
 
-        /* "partition.pyx":207
+        /* "partition.pyx":242
  *                 free(xadj)
  *                 free(adjncy)
  *                 free(adjwgt)             # <<<<<<<<<<<<<<
@@ -4572,20 +5077,20 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
         free(__pyx_v_adjwgt);
 
-        /* "partition.pyx":208
+        /* "partition.pyx":243
  *                 free(adjncy)
  *                 free(adjwgt)
  *                 raise MemoryError("Failed to allocate memory for vwgt")             # <<<<<<<<<<<<<<
  * 
  *             for i in range(n):
  */
-        __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 208, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 243, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_Raise(__pyx_t_2, 0, 0, 0);
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-        __PYX_ERR(0, 208, __pyx_L1_error)
+        __PYX_ERR(0, 243, __pyx_L1_error)
 
-        /* "partition.pyx":204
+        /* "partition.pyx":239
  *             ncon = len(nodew[0])
  *             vwgt = <idx_t*>malloc(n * ncon * sizeof(idx_t))
  *             if vwgt == NULL:             # <<<<<<<<<<<<<<
@@ -4594,7 +5099,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
       }
 
-      /* "partition.pyx":210
+      /* "partition.pyx":245
  *                 raise MemoryError("Failed to allocate memory for vwgt")
  * 
  *             for i in range(n):             # <<<<<<<<<<<<<<
@@ -4606,7 +5111,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
       for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_7; __pyx_t_8+=1) {
         __pyx_v_i = __pyx_t_8;
 
-        /* "partition.pyx":211
+        /* "partition.pyx":246
  * 
  *             for i in range(n):
  *                 for j in range(ncon):             # <<<<<<<<<<<<<<
@@ -4618,23 +5123,23 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
         for (__pyx_t_19 = 0; __pyx_t_19 < __pyx_t_18; __pyx_t_19+=1) {
           __pyx_v_j = __pyx_t_19;
 
-          /* "partition.pyx":212
+          /* "partition.pyx":247
  *             for i in range(n):
  *                 for j in range(ncon):
  *                     vwgt[i*ncon + j] = nodew[i][j]             # <<<<<<<<<<<<<<
  * 
- *     # Handle vertex sizes
+ *     cdef idx_t* vsize = NULL
  */
           if (unlikely(__pyx_v_nodew == Py_None)) {
             PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-            __PYX_ERR(0, 212, __pyx_L1_error)
+            __PYX_ERR(0, 247, __pyx_L1_error)
           }
-          __pyx_t_2 = __Pyx_GetItemInt_List(__pyx_v_nodew, __pyx_v_i, size_t, 0, __Pyx_PyInt_FromSize_t, 1, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 212, __pyx_L1_error)
+          __pyx_t_2 = __Pyx_GetItemInt_List(__pyx_v_nodew, __pyx_v_i, size_t, 0, __Pyx_PyInt_FromSize_t, 1, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 247, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_2);
-          __pyx_t_14 = __Pyx_GetItemInt(__pyx_t_2, __pyx_v_j, size_t, 0, __Pyx_PyInt_FromSize_t, 0, 0, 1); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 212, __pyx_L1_error)
+          __pyx_t_14 = __Pyx_GetItemInt(__pyx_t_2, __pyx_v_j, size_t, 0, __Pyx_PyInt_FromSize_t, 0, 0, 1); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 247, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_14);
           __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-          __pyx_t_20 = __Pyx_PyInt_As_int(__pyx_t_14); if (unlikely((__pyx_t_20 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 212, __pyx_L1_error)
+          __pyx_t_20 = __Pyx_PyInt_As_int(__pyx_t_14); if (unlikely((__pyx_t_20 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 247, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
           (__pyx_v_vwgt[((__pyx_v_i * __pyx_v_ncon) + __pyx_v_j)]) = __pyx_t_20;
         }
@@ -4642,25 +5147,25 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
     }
     __pyx_L27:;
 
-    /* "partition.pyx":188
+    /* "partition.pyx":225
  *     cdef idx_t ncon = 1
  * 
  *     if nodew is not None:             # <<<<<<<<<<<<<<
  *         if isinstance(nodew[0], int):
- *             # Single constraint
+ *             vwgt = <idx_t*>malloc(n * sizeof(idx_t))
  */
   }
 
-  /* "partition.pyx":215
+  /* "partition.pyx":249
+ *                     vwgt[i*ncon + j] = nodew[i][j]
  * 
- *     # Handle vertex sizes
  *     cdef idx_t* vsize = NULL             # <<<<<<<<<<<<<<
  * 
  *     if nodesz is not None:
  */
   __pyx_v_vsize = NULL;
 
-  /* "partition.pyx":217
+  /* "partition.pyx":251
  *     cdef idx_t* vsize = NULL
  * 
  *     if nodesz is not None:             # <<<<<<<<<<<<<<
@@ -4670,7 +5175,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
   __pyx_t_5 = (__pyx_v_nodesz != ((PyObject*)Py_None));
   if (__pyx_t_5) {
 
-    /* "partition.pyx":218
+    /* "partition.pyx":252
  * 
  *     if nodesz is not None:
  *         vsize = <idx_t*>malloc(n * sizeof(idx_t))             # <<<<<<<<<<<<<<
@@ -4679,7 +5184,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
     __pyx_v_vsize = ((__pyx_t_5metis_idx_t *)malloc((__pyx_v_n * (sizeof(__pyx_t_5metis_idx_t)))));
 
-    /* "partition.pyx":219
+    /* "partition.pyx":253
  *     if nodesz is not None:
  *         vsize = <idx_t*>malloc(n * sizeof(idx_t))
  *         if vsize == NULL:             # <<<<<<<<<<<<<<
@@ -4689,7 +5194,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
     __pyx_t_5 = (__pyx_v_vsize == NULL);
     if (__pyx_t_5) {
 
-      /* "partition.pyx":220
+      /* "partition.pyx":254
  *         vsize = <idx_t*>malloc(n * sizeof(idx_t))
  *         if vsize == NULL:
  *             free(xadj)             # <<<<<<<<<<<<<<
@@ -4698,7 +5203,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
       free(__pyx_v_xadj);
 
-      /* "partition.pyx":221
+      /* "partition.pyx":255
  *         if vsize == NULL:
  *             free(xadj)
  *             free(adjncy)             # <<<<<<<<<<<<<<
@@ -4707,7 +5212,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
       free(__pyx_v_adjncy);
 
-      /* "partition.pyx":222
+      /* "partition.pyx":256
  *             free(xadj)
  *             free(adjncy)
  *             free(adjwgt)             # <<<<<<<<<<<<<<
@@ -4716,7 +5221,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
       free(__pyx_v_adjwgt);
 
-      /* "partition.pyx":223
+      /* "partition.pyx":257
  *             free(adjncy)
  *             free(adjwgt)
  *             if vwgt != NULL:             # <<<<<<<<<<<<<<
@@ -4726,7 +5231,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
       __pyx_t_5 = (__pyx_v_vwgt != NULL);
       if (__pyx_t_5) {
 
-        /* "partition.pyx":224
+        /* "partition.pyx":258
  *             free(adjwgt)
  *             if vwgt != NULL:
  *                 free(vwgt)             # <<<<<<<<<<<<<<
@@ -4735,7 +5240,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
         free(__pyx_v_vwgt);
 
-        /* "partition.pyx":223
+        /* "partition.pyx":257
  *             free(adjncy)
  *             free(adjwgt)
  *             if vwgt != NULL:             # <<<<<<<<<<<<<<
@@ -4744,20 +5249,20 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
       }
 
-      /* "partition.pyx":225
+      /* "partition.pyx":259
  *             if vwgt != NULL:
  *                 free(vwgt)
  *             raise MemoryError("Failed to allocate memory for vsize")             # <<<<<<<<<<<<<<
  * 
  *         for i in range(n):
  */
-      __pyx_t_14 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 225, __pyx_L1_error)
+      __pyx_t_14 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 259, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_14);
       __Pyx_Raise(__pyx_t_14, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
-      __PYX_ERR(0, 225, __pyx_L1_error)
+      __PYX_ERR(0, 259, __pyx_L1_error)
 
-      /* "partition.pyx":219
+      /* "partition.pyx":253
  *     if nodesz is not None:
  *         vsize = <idx_t*>malloc(n * sizeof(idx_t))
  *         if vsize == NULL:             # <<<<<<<<<<<<<<
@@ -4766,7 +5271,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
     }
 
-    /* "partition.pyx":227
+    /* "partition.pyx":261
  *             raise MemoryError("Failed to allocate memory for vsize")
  * 
  *         for i in range(n):             # <<<<<<<<<<<<<<
@@ -4778,7 +5283,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
     for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_7; __pyx_t_8+=1) {
       __pyx_v_i = __pyx_t_8;
 
-      /* "partition.pyx":228
+      /* "partition.pyx":262
  * 
  *         for i in range(n):
  *             vsize[i] = nodesz[i]             # <<<<<<<<<<<<<<
@@ -4787,16 +5292,16 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
       if (unlikely(__pyx_v_nodesz == Py_None)) {
         PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-        __PYX_ERR(0, 228, __pyx_L1_error)
+        __PYX_ERR(0, 262, __pyx_L1_error)
       }
-      __pyx_t_14 = __Pyx_GetItemInt_List(__pyx_v_nodesz, __pyx_v_i, size_t, 0, __Pyx_PyInt_FromSize_t, 1, 0, 1); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 228, __pyx_L1_error)
+      __pyx_t_14 = __Pyx_GetItemInt_List(__pyx_v_nodesz, __pyx_v_i, size_t, 0, __Pyx_PyInt_FromSize_t, 1, 0, 1); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 262, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_14);
-      __pyx_t_16 = __Pyx_PyInt_As_int(__pyx_t_14); if (unlikely((__pyx_t_16 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 228, __pyx_L1_error)
+      __pyx_t_16 = __Pyx_PyInt_As_int(__pyx_t_14); if (unlikely((__pyx_t_16 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 262, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
       (__pyx_v_vsize[__pyx_v_i]) = __pyx_t_16;
     }
 
-    /* "partition.pyx":217
+    /* "partition.pyx":251
  *     cdef idx_t* vsize = NULL
  * 
  *     if nodesz is not None:             # <<<<<<<<<<<<<<
@@ -4805,7 +5310,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
   }
 
-  /* "partition.pyx":230
+  /* "partition.pyx":264
  *             vsize[i] = nodesz[i]
  * 
  *     if not has_weights:             # <<<<<<<<<<<<<<
@@ -4815,7 +5320,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
   __pyx_t_5 = (!__pyx_v_has_weights);
   if (__pyx_t_5) {
 
-    /* "partition.pyx":231
+    /* "partition.pyx":265
  * 
  *     if not has_weights:
  *         free(adjwgt)             # <<<<<<<<<<<<<<
@@ -4824,16 +5329,16 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
     free(__pyx_v_adjwgt);
 
-    /* "partition.pyx":232
+    /* "partition.pyx":266
  *     if not has_weights:
  *         free(adjwgt)
  *         adjwgt = NULL             # <<<<<<<<<<<<<<
  * 
- *     # Handle target part weights
+ *     cdef real_t* tpwgts_ptr = NULL
  */
     __pyx_v_adjwgt = NULL;
 
-    /* "partition.pyx":230
+    /* "partition.pyx":264
  *             vsize[i] = nodesz[i]
  * 
  *     if not has_weights:             # <<<<<<<<<<<<<<
@@ -4842,16 +5347,16 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
   }
 
-  /* "partition.pyx":235
+  /* "partition.pyx":268
+ *         adjwgt = NULL
  * 
- *     # Handle target part weights
  *     cdef real_t* tpwgts_ptr = NULL             # <<<<<<<<<<<<<<
  * 
  *     if tpwgts is not None:
  */
   __pyx_v_tpwgts_ptr = NULL;
 
-  /* "partition.pyx":237
+  /* "partition.pyx":270
  *     cdef real_t* tpwgts_ptr = NULL
  * 
  *     if tpwgts is not None:             # <<<<<<<<<<<<<<
@@ -4861,7 +5366,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
   __pyx_t_5 = (__pyx_v_tpwgts != ((PyObject*)Py_None));
   if (__pyx_t_5) {
 
-    /* "partition.pyx":238
+    /* "partition.pyx":271
  * 
  *     if tpwgts is not None:
  *         tpwgts_ptr = <real_t*>malloc(nparts * ncon * sizeof(real_t))             # <<<<<<<<<<<<<<
@@ -4870,7 +5375,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
     __pyx_v_tpwgts_ptr = ((__pyx_t_5metis_real_t *)malloc(((__pyx_v_nparts * __pyx_v_ncon) * (sizeof(__pyx_t_5metis_real_t)))));
 
-    /* "partition.pyx":239
+    /* "partition.pyx":272
  *     if tpwgts is not None:
  *         tpwgts_ptr = <real_t*>malloc(nparts * ncon * sizeof(real_t))
  *         if tpwgts_ptr == NULL:             # <<<<<<<<<<<<<<
@@ -4880,7 +5385,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
     __pyx_t_5 = (__pyx_v_tpwgts_ptr == NULL);
     if (__pyx_t_5) {
 
-      /* "partition.pyx":240
+      /* "partition.pyx":273
  *         tpwgts_ptr = <real_t*>malloc(nparts * ncon * sizeof(real_t))
  *         if tpwgts_ptr == NULL:
  *             free(xadj)             # <<<<<<<<<<<<<<
@@ -4889,7 +5394,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
       free(__pyx_v_xadj);
 
-      /* "partition.pyx":241
+      /* "partition.pyx":274
  *         if tpwgts_ptr == NULL:
  *             free(xadj)
  *             free(adjncy)             # <<<<<<<<<<<<<<
@@ -4898,7 +5403,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
       free(__pyx_v_adjncy);
 
-      /* "partition.pyx":242
+      /* "partition.pyx":275
  *             free(xadj)
  *             free(adjncy)
  *             if adjwgt != NULL:             # <<<<<<<<<<<<<<
@@ -4908,7 +5413,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
       __pyx_t_5 = (__pyx_v_adjwgt != NULL);
       if (__pyx_t_5) {
 
-        /* "partition.pyx":243
+        /* "partition.pyx":276
  *             free(adjncy)
  *             if adjwgt != NULL:
  *                 free(adjwgt)             # <<<<<<<<<<<<<<
@@ -4917,7 +5422,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
         free(__pyx_v_adjwgt);
 
-        /* "partition.pyx":242
+        /* "partition.pyx":275
  *             free(xadj)
  *             free(adjncy)
  *             if adjwgt != NULL:             # <<<<<<<<<<<<<<
@@ -4926,7 +5431,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
       }
 
-      /* "partition.pyx":244
+      /* "partition.pyx":277
  *             if adjwgt != NULL:
  *                 free(adjwgt)
  *             if vwgt != NULL:             # <<<<<<<<<<<<<<
@@ -4936,7 +5441,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
       __pyx_t_5 = (__pyx_v_vwgt != NULL);
       if (__pyx_t_5) {
 
-        /* "partition.pyx":245
+        /* "partition.pyx":278
  *                 free(adjwgt)
  *             if vwgt != NULL:
  *                 free(vwgt)             # <<<<<<<<<<<<<<
@@ -4945,7 +5450,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
         free(__pyx_v_vwgt);
 
-        /* "partition.pyx":244
+        /* "partition.pyx":277
  *             if adjwgt != NULL:
  *                 free(adjwgt)
  *             if vwgt != NULL:             # <<<<<<<<<<<<<<
@@ -4954,7 +5459,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
       }
 
-      /* "partition.pyx":246
+      /* "partition.pyx":279
  *             if vwgt != NULL:
  *                 free(vwgt)
  *             if vsize != NULL:             # <<<<<<<<<<<<<<
@@ -4964,7 +5469,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
       __pyx_t_5 = (__pyx_v_vsize != NULL);
       if (__pyx_t_5) {
 
-        /* "partition.pyx":247
+        /* "partition.pyx":280
  *                 free(vwgt)
  *             if vsize != NULL:
  *                 free(vsize)             # <<<<<<<<<<<<<<
@@ -4973,7 +5478,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
         free(__pyx_v_vsize);
 
-        /* "partition.pyx":246
+        /* "partition.pyx":279
  *             if vwgt != NULL:
  *                 free(vwgt)
  *             if vsize != NULL:             # <<<<<<<<<<<<<<
@@ -4982,20 +5487,20 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
       }
 
-      /* "partition.pyx":248
+      /* "partition.pyx":281
  *             if vsize != NULL:
  *                 free(vsize)
  *             raise MemoryError("Failed to allocate memory for tpwgts")             # <<<<<<<<<<<<<<
  * 
  *         for i in range(nparts * ncon):
  */
-      __pyx_t_14 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__6, NULL); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 248, __pyx_L1_error)
+      __pyx_t_14 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__6, NULL); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 281, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_14);
       __Pyx_Raise(__pyx_t_14, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
-      __PYX_ERR(0, 248, __pyx_L1_error)
+      __PYX_ERR(0, 281, __pyx_L1_error)
 
-      /* "partition.pyx":239
+      /* "partition.pyx":272
  *     if tpwgts is not None:
  *         tpwgts_ptr = <real_t*>malloc(nparts * ncon * sizeof(real_t))
  *         if tpwgts_ptr == NULL:             # <<<<<<<<<<<<<<
@@ -5004,7 +5509,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
     }
 
-    /* "partition.pyx":250
+    /* "partition.pyx":283
  *             raise MemoryError("Failed to allocate memory for tpwgts")
  * 
  *         for i in range(nparts * ncon):             # <<<<<<<<<<<<<<
@@ -5016,25 +5521,25 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
     for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_18; __pyx_t_6+=1) {
       __pyx_v_i = __pyx_t_6;
 
-      /* "partition.pyx":251
+      /* "partition.pyx":284
  * 
  *         for i in range(nparts * ncon):
  *             tpwgts_ptr[i] = tpwgts[i]             # <<<<<<<<<<<<<<
  * 
- *     # Call the C function to perform partitioning
+ *     cdef vector[vector[idx_t]] result
  */
       if (unlikely(__pyx_v_tpwgts == Py_None)) {
         PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-        __PYX_ERR(0, 251, __pyx_L1_error)
+        __PYX_ERR(0, 284, __pyx_L1_error)
       }
-      __pyx_t_14 = __Pyx_GetItemInt_List(__pyx_v_tpwgts, __pyx_v_i, size_t, 0, __Pyx_PyInt_FromSize_t, 1, 0, 1); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 251, __pyx_L1_error)
+      __pyx_t_14 = __Pyx_GetItemInt_List(__pyx_v_tpwgts, __pyx_v_i, size_t, 0, __Pyx_PyInt_FromSize_t, 1, 0, 1); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 284, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_14);
-      __pyx_t_21 = __pyx_PyFloat_AsFloat(__pyx_t_14); if (unlikely((__pyx_t_21 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 251, __pyx_L1_error)
+      __pyx_t_21 = __pyx_PyFloat_AsFloat(__pyx_t_14); if (unlikely((__pyx_t_21 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 284, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
       (__pyx_v_tpwgts_ptr[__pyx_v_i]) = __pyx_t_21;
     }
 
-    /* "partition.pyx":237
+    /* "partition.pyx":270
  *     cdef real_t* tpwgts_ptr = NULL
  * 
  *     if tpwgts is not None:             # <<<<<<<<<<<<<<
@@ -5043,12 +5548,12 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
   }
 
-  /* "partition.pyx":254
+  /* "partition.pyx":287
  * 
- *     # Call the C function to perform partitioning
+ *     cdef vector[vector[idx_t]] result
  *     _c_part_graph_kway_extended(             # <<<<<<<<<<<<<<
+ *         result,
  *         nparts, xadj, adjncy, n, m, vwgt, vsize, adjwgt,
- *         ncon, tpwgts_ptr, ubvec_val
  */
   __pyx_t_22.__pyx_n = 6;
   __pyx_t_22.vwgt_input = __pyx_v_vwgt;
@@ -5057,9 +5562,108 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
   __pyx_t_22.ncon = __pyx_v_ncon;
   __pyx_t_22.tpwgts_ptr = __pyx_v_tpwgts_ptr;
   __pyx_t_22.ubvec_val = __pyx_v_ubvec_val;
-  __pyx_f_11partitioner__c_part_graph_kway_extended(__pyx_v_nparts, __pyx_v_xadj, __pyx_v_adjncy, __pyx_v_n, __pyx_v_m, &__pyx_t_22); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 254, __pyx_L1_error)
+  __pyx_f_11partitioner__c_part_graph_kway_extended(__pyx_v_result, __pyx_v_nparts, __pyx_v_xadj, __pyx_v_adjncy, __pyx_v_n, __pyx_v_m, &__pyx_t_22); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 287, __pyx_L1_error)
 
-  /* "partition.pyx":260
+  /* "partition.pyx":293
+ *     )
+ * 
+ *     for i in range(result.size()):             # <<<<<<<<<<<<<<
+ *         print(f"Partition {i}:")
+ *         for j in range(result[i].size()):
+ */
+  __pyx_t_23 = __pyx_v_result.size();
+  __pyx_t_24 = __pyx_t_23;
+  for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_24; __pyx_t_6+=1) {
+    __pyx_v_i = __pyx_t_6;
+
+    /* "partition.pyx":294
+ * 
+ *     for i in range(result.size()):
+ *         print(f"Partition {i}:")             # <<<<<<<<<<<<<<
+ *         for j in range(result[i].size()):
+ *             print(f"  {result[i][j]}", end=" ")
+ */
+    __pyx_t_14 = PyTuple_New(3); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 294, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_14);
+    __pyx_t_1 = 0;
+    __pyx_t_25 = 127;
+    __Pyx_INCREF(__pyx_kp_u_Partition);
+    __pyx_t_1 += 10;
+    __Pyx_GIVEREF(__pyx_kp_u_Partition);
+    PyTuple_SET_ITEM(__pyx_t_14, 0, __pyx_kp_u_Partition);
+    __pyx_t_2 = __Pyx_PyUnicode_From_size_t(__pyx_v_i, 0, ' ', 'd'); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 294, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_t_1 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_2);
+    __Pyx_GIVEREF(__pyx_t_2);
+    PyTuple_SET_ITEM(__pyx_t_14, 1, __pyx_t_2);
+    __pyx_t_2 = 0;
+    __Pyx_INCREF(__pyx_kp_u__7);
+    __pyx_t_1 += 1;
+    __Pyx_GIVEREF(__pyx_kp_u__7);
+    PyTuple_SET_ITEM(__pyx_t_14, 2, __pyx_kp_u__7);
+    __pyx_t_2 = __Pyx_PyUnicode_Join(__pyx_t_14, 3, __pyx_t_1, __pyx_t_25); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 294, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
+    __pyx_t_14 = __Pyx_PyObject_CallOneArg(__pyx_builtin_print, __pyx_t_2); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 294, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_14);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
+
+    /* "partition.pyx":295
+ *     for i in range(result.size()):
+ *         print(f"Partition {i}:")
+ *         for j in range(result[i].size()):             # <<<<<<<<<<<<<<
+ *             print(f"  {result[i][j]}", end=" ")
+ *         print()
+ */
+    __pyx_t_26 = (__pyx_v_result[__pyx_v_i]).size();
+    __pyx_t_27 = __pyx_t_26;
+    for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_27; __pyx_t_7+=1) {
+      __pyx_v_j = __pyx_t_7;
+
+      /* "partition.pyx":296
+ *         print(f"Partition {i}:")
+ *         for j in range(result[i].size()):
+ *             print(f"  {result[i][j]}", end=" ")             # <<<<<<<<<<<<<<
+ *         print()
+ * 
+ */
+      __pyx_t_14 = __Pyx_PyInt_From_int(((__pyx_v_result[__pyx_v_i])[__pyx_v_j])); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 296, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_14);
+      __pyx_t_2 = __Pyx_PyObject_FormatSimple(__pyx_t_14, __pyx_empty_unicode); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 296, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
+      __pyx_t_14 = __Pyx_PyUnicode_Concat(__pyx_kp_u__8, __pyx_t_2); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 296, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_14);
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 296, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_GIVEREF(__pyx_t_14);
+      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_14)) __PYX_ERR(0, 296, __pyx_L1_error);
+      __pyx_t_14 = 0;
+      __pyx_t_14 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 296, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_14);
+      if (PyDict_SetItem(__pyx_t_14, __pyx_n_s_end, __pyx_kp_s__9) < 0) __PYX_ERR(0, 296, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_print, __pyx_t_2, __pyx_t_14); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 296, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_3);
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
+      __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    }
+
+    /* "partition.pyx":297
+ *         for j in range(result[i].size()):
+ *             print(f"  {result[i][j]}", end=" ")
+ *         print()             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+    __pyx_t_3 = __Pyx_PyObject_CallNoArg(__pyx_builtin_print); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 297, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  }
+
+  /* "partition.pyx":301
  * 
  *     # Free allocated memory
  *     free(xadj)             # <<<<<<<<<<<<<<
@@ -5068,7 +5672,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
   free(__pyx_v_xadj);
 
-  /* "partition.pyx":261
+  /* "partition.pyx":302
  *     # Free allocated memory
  *     free(xadj)
  *     free(adjncy)             # <<<<<<<<<<<<<<
@@ -5077,7 +5681,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
   free(__pyx_v_adjncy);
 
-  /* "partition.pyx":262
+  /* "partition.pyx":303
  *     free(xadj)
  *     free(adjncy)
  *     if adjwgt != NULL:             # <<<<<<<<<<<<<<
@@ -5087,7 +5691,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
   __pyx_t_5 = (__pyx_v_adjwgt != NULL);
   if (__pyx_t_5) {
 
-    /* "partition.pyx":263
+    /* "partition.pyx":304
  *     free(adjncy)
  *     if adjwgt != NULL:
  *         free(adjwgt)             # <<<<<<<<<<<<<<
@@ -5096,7 +5700,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
     free(__pyx_v_adjwgt);
 
-    /* "partition.pyx":262
+    /* "partition.pyx":303
  *     free(xadj)
  *     free(adjncy)
  *     if adjwgt != NULL:             # <<<<<<<<<<<<<<
@@ -5105,7 +5709,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
   }
 
-  /* "partition.pyx":264
+  /* "partition.pyx":305
  *     if adjwgt != NULL:
  *         free(adjwgt)
  *     if vwgt != NULL:             # <<<<<<<<<<<<<<
@@ -5115,7 +5719,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
   __pyx_t_5 = (__pyx_v_vwgt != NULL);
   if (__pyx_t_5) {
 
-    /* "partition.pyx":265
+    /* "partition.pyx":306
  *         free(adjwgt)
  *     if vwgt != NULL:
  *         free(vwgt)             # <<<<<<<<<<<<<<
@@ -5124,7 +5728,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
     free(__pyx_v_vwgt);
 
-    /* "partition.pyx":264
+    /* "partition.pyx":305
  *     if adjwgt != NULL:
  *         free(adjwgt)
  *     if vwgt != NULL:             # <<<<<<<<<<<<<<
@@ -5133,7 +5737,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
   }
 
-  /* "partition.pyx":266
+  /* "partition.pyx":307
  *     if vwgt != NULL:
  *         free(vwgt)
  *     if vsize != NULL:             # <<<<<<<<<<<<<<
@@ -5143,7 +5747,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
   __pyx_t_5 = (__pyx_v_vsize != NULL);
   if (__pyx_t_5) {
 
-    /* "partition.pyx":267
+    /* "partition.pyx":308
  *         free(vwgt)
  *     if vsize != NULL:
  *         free(vsize)             # <<<<<<<<<<<<<<
@@ -5152,7 +5756,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
     free(__pyx_v_vsize);
 
-    /* "partition.pyx":266
+    /* "partition.pyx":307
  *     if vwgt != NULL:
  *         free(vwgt)
  *     if vsize != NULL:             # <<<<<<<<<<<<<<
@@ -5161,7 +5765,7 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
   }
 
-  /* "partition.pyx":268
+  /* "partition.pyx":309
  *     if vsize != NULL:
  *         free(vsize)
  *     if tpwgts_ptr != NULL:             # <<<<<<<<<<<<<<
@@ -5170,14 +5774,14 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
   __pyx_t_5 = (__pyx_v_tpwgts_ptr != NULL);
   if (__pyx_t_5) {
 
-    /* "partition.pyx":269
+    /* "partition.pyx":310
  *         free(vsize)
  *     if tpwgts_ptr != NULL:
  *         free(tpwgts_ptr)             # <<<<<<<<<<<<<<
  */
     free(__pyx_v_tpwgts_ptr);
 
-    /* "partition.pyx":268
+    /* "partition.pyx":309
  *     if vsize != NULL:
  *         free(vsize)
  *     if tpwgts_ptr != NULL:             # <<<<<<<<<<<<<<
@@ -5185,8 +5789,8 @@ static PyObject *__pyx_pf_11partitioner_part_graph_kway_extended(CYTHON_UNUSED P
  */
   }
 
-  /* "partition.pyx":138
- *     pass
+  /* "partition.pyx":179
+ *     free(part)
  * 
  * def part_graph_kway_extended(list adjlist, int nparts, list nodew=None, list nodesz=None,             # <<<<<<<<<<<<<<
  *                             list tpwgts=None, float ubvec_val=1.03):
@@ -5236,10 +5840,13 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_kp_s_Failed_to_allocate_memory_for_vw, __pyx_k_Failed_to_allocate_memory_for_vw, sizeof(__pyx_k_Failed_to_allocate_memory_for_vw), 0, 0, 1, 0},
     {&__pyx_kp_s_Failed_to_allocate_memory_for_xa, __pyx_k_Failed_to_allocate_memory_for_xa, sizeof(__pyx_k_Failed_to_allocate_memory_for_xa), 0, 0, 1, 0},
     {&__pyx_n_s_MemoryError, __pyx_k_MemoryError, sizeof(__pyx_k_MemoryError), 0, 0, 1, 1},
-    {&__pyx_kp_s_Result, __pyx_k_Result, sizeof(__pyx_k_Result), 0, 0, 1, 0},
+    {&__pyx_kp_u_Partition, __pyx_k_Partition, sizeof(__pyx_k_Partition), 0, 1, 0, 0},
     {&__pyx_n_s_TypeError, __pyx_k_TypeError, sizeof(__pyx_k_TypeError), 0, 0, 1, 1},
     {&__pyx_n_s_ValueError, __pyx_k_ValueError, sizeof(__pyx_k_ValueError), 0, 0, 1, 1},
-    {&__pyx_n_s__9, __pyx_k__9, sizeof(__pyx_k__9), 0, 0, 1, 1},
+    {&__pyx_n_s__12, __pyx_k__12, sizeof(__pyx_k__12), 0, 0, 1, 1},
+    {&__pyx_kp_u__7, __pyx_k__7, sizeof(__pyx_k__7), 0, 1, 0, 0},
+    {&__pyx_kp_u__8, __pyx_k__8, sizeof(__pyx_k__8), 0, 1, 0, 0},
+    {&__pyx_kp_s__9, __pyx_k__9, sizeof(__pyx_k__9), 0, 0, 1, 0},
     {&__pyx_n_s_adj, __pyx_k_adj, sizeof(__pyx_k_adj), 0, 0, 1, 1},
     {&__pyx_n_s_adjlist, __pyx_k_adjlist, sizeof(__pyx_k_adjlist), 0, 0, 1, 1},
     {&__pyx_n_s_adjncy, __pyx_k_adjncy, sizeof(__pyx_k_adjncy), 0, 0, 1, 1},
@@ -5247,6 +5854,7 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_asyncio_coroutines, __pyx_k_asyncio_coroutines, sizeof(__pyx_k_asyncio_coroutines), 0, 0, 1, 1},
     {&__pyx_n_s_cline_in_traceback, __pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 0, 1, 1},
     {&__pyx_n_s_e, __pyx_k_e, sizeof(__pyx_k_e), 0, 0, 1, 1},
+    {&__pyx_n_s_end, __pyx_k_end, sizeof(__pyx_k_end), 0, 0, 1, 1},
     {&__pyx_n_s_has_weights, __pyx_k_has_weights, sizeof(__pyx_k_has_weights), 0, 0, 1, 1},
     {&__pyx_n_s_i, __pyx_k_i, sizeof(__pyx_k_i), 0, 0, 1, 1},
     {&__pyx_n_s_is_coroutine, __pyx_k_is_coroutine, sizeof(__pyx_k_is_coroutine), 0, 0, 1, 1},
@@ -5266,6 +5874,7 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_partitioner, __pyx_k_partitioner, sizeof(__pyx_k_partitioner), 0, 0, 1, 1},
     {&__pyx_n_s_print, __pyx_k_print, sizeof(__pyx_k_print), 0, 0, 1, 1},
     {&__pyx_n_s_range, __pyx_k_range, sizeof(__pyx_k_range), 0, 0, 1, 1},
+    {&__pyx_n_s_result, __pyx_k_result, sizeof(__pyx_k_result), 0, 0, 1, 1},
     {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
     {&__pyx_n_s_tpwgts, __pyx_k_tpwgts, sizeof(__pyx_k_tpwgts), 0, 0, 1, 1},
     {&__pyx_n_s_tpwgts_ptr, __pyx_k_tpwgts_ptr, sizeof(__pyx_k_tpwgts_ptr), 0, 0, 1, 1},
@@ -5280,11 +5889,11 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
 }
 /* #### Code section: cached_builtins ### */
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_MemoryError = __Pyx_GetBuiltinName(__pyx_n_s_MemoryError); if (!__pyx_builtin_MemoryError) __PYX_ERR(0, 29, __pyx_L1_error)
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 37, __pyx_L1_error)
-  __pyx_builtin_print = __Pyx_GetBuiltinName(__pyx_n_s_print); if (!__pyx_builtin_print) __PYX_ERR(0, 130, __pyx_L1_error)
-  __pyx_builtin_TypeError = __Pyx_GetBuiltinName(__pyx_n_s_TypeError); if (!__pyx_builtin_TypeError) __PYX_ERR(0, 177, __pyx_L1_error)
-  __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(0, 177, __pyx_L1_error)
+  __pyx_builtin_MemoryError = __Pyx_GetBuiltinName(__pyx_n_s_MemoryError); if (!__pyx_builtin_MemoryError) __PYX_ERR(0, 32, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 40, __pyx_L1_error)
+  __pyx_builtin_TypeError = __Pyx_GetBuiltinName(__pyx_n_s_TypeError); if (!__pyx_builtin_TypeError) __PYX_ERR(0, 215, __pyx_L1_error)
+  __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(0, 215, __pyx_L1_error)
+  __pyx_builtin_print = __Pyx_GetBuiltinName(__pyx_n_s_print); if (!__pyx_builtin_print) __PYX_ERR(0, 294, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -5295,83 +5904,83 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "partition.pyx":29
+  /* "partition.pyx":32
  *     cdef idx_t* xadj = <idx_t*>malloc((n+1) * sizeof(idx_t))
  *     if xadj == NULL:
  *         raise MemoryError("Failed to allocate memory for xadj")             # <<<<<<<<<<<<<<
  * 
  *     cdef idx_t* adjncy = <idx_t*>malloc(m * sizeof(idx_t))
  */
-  __pyx_tuple_ = PyTuple_Pack(1, __pyx_kp_s_Failed_to_allocate_memory_for_xa); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 29, __pyx_L1_error)
+  __pyx_tuple_ = PyTuple_Pack(1, __pyx_kp_s_Failed_to_allocate_memory_for_xa); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 32, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
 
-  /* "partition.pyx":34
+  /* "partition.pyx":37
  *     if adjncy == NULL:
  *         free(xadj)
  *         raise MemoryError("Failed to allocate memory for adjncy")             # <<<<<<<<<<<<<<
  * 
  *     cdef size_t i
  */
-  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_kp_s_Failed_to_allocate_memory_for_ad); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(0, 34, __pyx_L1_error)
+  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_kp_s_Failed_to_allocate_memory_for_ad); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(0, 37, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__2);
   __Pyx_GIVEREF(__pyx_tuple__2);
 
-  /* "partition.pyx":52
+  /* "partition.pyx":55
  *             free(xadj)
  *             free(adjncy)
  *             raise MemoryError("Failed to allocate memory for vwgt")             # <<<<<<<<<<<<<<
  * 
  *         for i in range(n * ncon):
  */
-  __pyx_tuple__3 = PyTuple_Pack(1, __pyx_kp_s_Failed_to_allocate_memory_for_vw); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(0, 52, __pyx_L1_error)
+  __pyx_tuple__3 = PyTuple_Pack(1, __pyx_kp_s_Failed_to_allocate_memory_for_vw); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(0, 55, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__3);
   __Pyx_GIVEREF(__pyx_tuple__3);
 
-  /* "partition.pyx":64
+  /* "partition.pyx":67
  *             if vwgt != NULL:
  *                 free(vwgt)
  *             raise MemoryError("Failed to allocate memory for vsize")             # <<<<<<<<<<<<<<
  * 
  *         for i in range(n):
  */
-  __pyx_tuple__4 = PyTuple_Pack(1, __pyx_kp_s_Failed_to_allocate_memory_for_vs); if (unlikely(!__pyx_tuple__4)) __PYX_ERR(0, 64, __pyx_L1_error)
+  __pyx_tuple__4 = PyTuple_Pack(1, __pyx_kp_s_Failed_to_allocate_memory_for_vs); if (unlikely(!__pyx_tuple__4)) __PYX_ERR(0, 67, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__4);
   __Pyx_GIVEREF(__pyx_tuple__4);
 
-  /* "partition.pyx":78
+  /* "partition.pyx":81
  *             if vsize != NULL:
  *                 free(vsize)
  *             raise MemoryError("Failed to allocate memory for adjwgt")             # <<<<<<<<<<<<<<
  * 
  *         for i in range(m):
  */
-  __pyx_tuple__5 = PyTuple_Pack(1, __pyx_kp_s_Failed_to_allocate_memory_for_ad_2); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(0, 78, __pyx_L1_error)
+  __pyx_tuple__5 = PyTuple_Pack(1, __pyx_kp_s_Failed_to_allocate_memory_for_ad_2); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(0, 81, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__5);
   __Pyx_GIVEREF(__pyx_tuple__5);
 
-  /* "partition.pyx":248
+  /* "partition.pyx":281
  *             if vsize != NULL:
  *                 free(vsize)
  *             raise MemoryError("Failed to allocate memory for tpwgts")             # <<<<<<<<<<<<<<
  * 
  *         for i in range(nparts * ncon):
  */
-  __pyx_tuple__6 = PyTuple_Pack(1, __pyx_kp_s_Failed_to_allocate_memory_for_tp); if (unlikely(!__pyx_tuple__6)) __PYX_ERR(0, 248, __pyx_L1_error)
+  __pyx_tuple__6 = PyTuple_Pack(1, __pyx_kp_s_Failed_to_allocate_memory_for_tp); if (unlikely(!__pyx_tuple__6)) __PYX_ERR(0, 281, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__6);
   __Pyx_GIVEREF(__pyx_tuple__6);
 
-  /* "partition.pyx":138
- *     pass
+  /* "partition.pyx":179
+ *     free(part)
  * 
  * def part_graph_kway_extended(list adjlist, int nparts, list nodew=None, list nodesz=None,             # <<<<<<<<<<<<<<
  *                             list tpwgts=None, float ubvec_val=1.03):
  *     cdef size_t n = len(adjlist)
  */
-  __pyx_tuple__7 = PyTuple_Pack(23, __pyx_n_s_adjlist, __pyx_n_s_nparts, __pyx_n_s_nodew, __pyx_n_s_nodesz, __pyx_n_s_tpwgts, __pyx_n_s_ubvec_val, __pyx_n_s_n, __pyx_n_s_m, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_e, __pyx_n_s_has_weights, __pyx_n_s_adj, __pyx_n_s_xadj, __pyx_n_s_adjncy, __pyx_n_s_adjwgt, __pyx_n_s_item, __pyx_n_s_neighbor, __pyx_n_s_weight, __pyx_n_s_vwgt, __pyx_n_s_ncon, __pyx_n_s_vsize, __pyx_n_s_tpwgts_ptr); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 138, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__7);
-  __Pyx_GIVEREF(__pyx_tuple__7);
-  __pyx_codeobj__8 = (PyObject*)__Pyx_PyCode_New(6, 0, 0, 23, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__7, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_partition_pyx, __pyx_n_s_part_graph_kway_extended, 138, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__8)) __PYX_ERR(0, 138, __pyx_L1_error)
+  __pyx_tuple__10 = PyTuple_Pack(24, __pyx_n_s_adjlist, __pyx_n_s_nparts, __pyx_n_s_nodew, __pyx_n_s_nodesz, __pyx_n_s_tpwgts, __pyx_n_s_ubvec_val, __pyx_n_s_n, __pyx_n_s_m, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_e, __pyx_n_s_has_weights, __pyx_n_s_adj, __pyx_n_s_xadj, __pyx_n_s_adjncy, __pyx_n_s_adjwgt, __pyx_n_s_item, __pyx_n_s_neighbor, __pyx_n_s_weight, __pyx_n_s_vwgt, __pyx_n_s_ncon, __pyx_n_s_vsize, __pyx_n_s_tpwgts_ptr, __pyx_n_s_result); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 179, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__10);
+  __Pyx_GIVEREF(__pyx_tuple__10);
+  __pyx_codeobj__11 = (PyObject*)__Pyx_PyCode_New(6, 0, 0, 24, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__10, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_partition_pyx, __pyx_n_s_part_graph_kway_extended, 179, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__11)) __PYX_ERR(0, 179, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -5382,6 +5991,8 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
 
 static CYTHON_SMALL_CODE int __Pyx_InitConstants(void) {
   if (__Pyx_CreateStringTabAndInitStrings() < 0) __PYX_ERR(0, 1, __pyx_L1_error);
+  __pyx_int_0 = PyInt_FromLong(0); if (unlikely(!__pyx_int_0)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __pyx_int_neg_1 = PyInt_FromLong(-1); if (unlikely(!__pyx_int_neg_1)) __PYX_ERR(0, 1, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -5736,42 +6347,42 @@ if (!__Pyx_RefNanny) {
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "partition.pyx":139
+  /* "partition.pyx":180
  * 
  * def part_graph_kway_extended(list adjlist, int nparts, list nodew=None, list nodesz=None,
  *                             list tpwgts=None, float ubvec_val=1.03):             # <<<<<<<<<<<<<<
  *     cdef size_t n = len(adjlist)
  *     cdef size_t m = 0
  */
-  __pyx_t_2 = PyFloat_FromDouble(((double)1.03)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 139, __pyx_L1_error)
+  __pyx_t_2 = PyFloat_FromDouble(((double)1.03)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 180, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
 
-  /* "partition.pyx":138
- *     pass
+  /* "partition.pyx":179
+ *     free(part)
  * 
  * def part_graph_kway_extended(list adjlist, int nparts, list nodew=None, list nodesz=None,             # <<<<<<<<<<<<<<
  *                             list tpwgts=None, float ubvec_val=1.03):
  *     cdef size_t n = len(adjlist)
  */
-  __pyx_t_3 = PyTuple_New(4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 138, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 179, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_INCREF(Py_None);
   __Pyx_GIVEREF(Py_None);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, Py_None)) __PYX_ERR(0, 138, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, Py_None)) __PYX_ERR(0, 179, __pyx_L1_error);
   __Pyx_INCREF(Py_None);
   __Pyx_GIVEREF(Py_None);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 1, Py_None)) __PYX_ERR(0, 138, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 1, Py_None)) __PYX_ERR(0, 179, __pyx_L1_error);
   __Pyx_INCREF(Py_None);
   __Pyx_GIVEREF(Py_None);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 2, Py_None)) __PYX_ERR(0, 138, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 2, Py_None)) __PYX_ERR(0, 179, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_2);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 3, __pyx_t_2)) __PYX_ERR(0, 138, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 3, __pyx_t_2)) __PYX_ERR(0, 179, __pyx_L1_error);
   __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_11partitioner_1part_graph_kway_extended, 0, __pyx_n_s_part_graph_kway_extended, NULL, __pyx_n_s_partitioner, __pyx_d, ((PyObject *)__pyx_codeobj__8)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 138, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_11partitioner_1part_graph_kway_extended, 0, __pyx_n_s_part_graph_kway_extended, NULL, __pyx_n_s_partitioner, __pyx_d, ((PyObject *)__pyx_codeobj__11)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 179, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_2, __pyx_t_3);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_part_graph_kway_extended, __pyx_t_2) < 0) __PYX_ERR(0, 138, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_part_graph_kway_extended, __pyx_t_2) < 0) __PYX_ERR(0, 179, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "partition.pyx":1
@@ -6198,236 +6809,76 @@ bad:
 }
 #endif
 
-/* PyFunctionFastCall */
-#if CYTHON_FAST_PYCALL && !CYTHON_VECTORCALL
-static PyObject* __Pyx_PyFunction_FastCallNoKw(PyCodeObject *co, PyObject **args, Py_ssize_t na,
-                                               PyObject *globals) {
-    PyFrameObject *f;
-    PyThreadState *tstate = __Pyx_PyThreadState_Current;
-    PyObject **fastlocals;
-    Py_ssize_t i;
-    PyObject *result;
-    assert(globals != NULL);
-    /* XXX Perhaps we should create a specialized
-       PyFrame_New() that doesn't take locals, but does
-       take builtins without sanity checking them.
-       */
-    assert(tstate != NULL);
-    f = PyFrame_New(tstate, co, globals, NULL);
-    if (f == NULL) {
-        return NULL;
+/* PyIntCompare */
+static CYTHON_INLINE int __Pyx_PyInt_BoolNeObjC(PyObject *op1, PyObject *op2, long intval, long inplace) {
+    CYTHON_MAYBE_UNUSED_VAR(intval);
+    CYTHON_UNUSED_VAR(inplace);
+    if (op1 == op2) {
+        return 0;
     }
-    fastlocals = __Pyx_PyFrame_GetLocalsplus(f);
-    for (i = 0; i < na; i++) {
-        Py_INCREF(*args);
-        fastlocals[i] = *args++;
-    }
-    result = PyEval_EvalFrameEx(f,0);
-    ++tstate->recursion_depth;
-    Py_DECREF(f);
-    --tstate->recursion_depth;
-    return result;
-}
-static PyObject *__Pyx_PyFunction_FastCallDict(PyObject *func, PyObject **args, Py_ssize_t nargs, PyObject *kwargs) {
-    PyCodeObject *co = (PyCodeObject *)PyFunction_GET_CODE(func);
-    PyObject *globals = PyFunction_GET_GLOBALS(func);
-    PyObject *argdefs = PyFunction_GET_DEFAULTS(func);
-    PyObject *closure;
-#if PY_MAJOR_VERSION >= 3
-    PyObject *kwdefs;
-#endif
-    PyObject *kwtuple, **k;
-    PyObject **d;
-    Py_ssize_t nd;
-    Py_ssize_t nk;
-    PyObject *result;
-    assert(kwargs == NULL || PyDict_Check(kwargs));
-    nk = kwargs ? PyDict_Size(kwargs) : 0;
     #if PY_MAJOR_VERSION < 3
-    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object"))) {
-        return NULL;
-    }
-    #else
-    if (unlikely(Py_EnterRecursiveCall(" while calling a Python object"))) {
-        return NULL;
+    if (likely(PyInt_CheckExact(op1))) {
+        const long b = intval;
+        long a = PyInt_AS_LONG(op1);
+        return (a != b);
     }
     #endif
-    if (
-#if PY_MAJOR_VERSION >= 3
-            co->co_kwonlyargcount == 0 &&
-#endif
-            likely(kwargs == NULL || nk == 0) &&
-            co->co_flags == (CO_OPTIMIZED | CO_NEWLOCALS | CO_NOFREE)) {
-        if (argdefs == NULL && co->co_argcount == nargs) {
-            result = __Pyx_PyFunction_FastCallNoKw(co, args, nargs, globals);
-            goto done;
-        }
-        else if (nargs == 0 && argdefs != NULL
-                 && co->co_argcount == Py_SIZE(argdefs)) {
-            /* function called with no arguments, but all parameters have
-               a default value: use default values as arguments .*/
-            args = &PyTuple_GET_ITEM(argdefs, 0);
-            result =__Pyx_PyFunction_FastCallNoKw(co, args, Py_SIZE(argdefs), globals);
-            goto done;
-        }
-    }
-    if (kwargs != NULL) {
-        Py_ssize_t pos, i;
-        kwtuple = PyTuple_New(2 * nk);
-        if (kwtuple == NULL) {
-            result = NULL;
-            goto done;
-        }
-        k = &PyTuple_GET_ITEM(kwtuple, 0);
-        pos = i = 0;
-        while (PyDict_Next(kwargs, &pos, &k[i], &k[i+1])) {
-            Py_INCREF(k[i]);
-            Py_INCREF(k[i+1]);
-            i += 2;
-        }
-        nk = i / 2;
-    }
-    else {
-        kwtuple = NULL;
-        k = NULL;
-    }
-    closure = PyFunction_GET_CLOSURE(func);
-#if PY_MAJOR_VERSION >= 3
-    kwdefs = PyFunction_GET_KW_DEFAULTS(func);
-#endif
-    if (argdefs != NULL) {
-        d = &PyTuple_GET_ITEM(argdefs, 0);
-        nd = Py_SIZE(argdefs);
-    }
-    else {
-        d = NULL;
-        nd = 0;
-    }
-#if PY_MAJOR_VERSION >= 3
-    result = PyEval_EvalCodeEx((PyObject*)co, globals, (PyObject *)NULL,
-                               args, (int)nargs,
-                               k, (int)nk,
-                               d, (int)nd, kwdefs, closure);
-#else
-    result = PyEval_EvalCodeEx(co, globals, (PyObject *)NULL,
-                               args, (int)nargs,
-                               k, (int)nk,
-                               d, (int)nd, closure);
-#endif
-    Py_XDECREF(kwtuple);
-done:
-    Py_LeaveRecursiveCall();
-    return result;
-}
-#endif
-
-/* PyObjectCallMethO */
-#if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg) {
-    PyObject *self, *result;
-    PyCFunction cfunc;
-    cfunc = __Pyx_CyOrPyCFunction_GET_FUNCTION(func);
-    self = __Pyx_CyOrPyCFunction_GET_SELF(func);
-    #if PY_MAJOR_VERSION < 3
-    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
-        return NULL;
-    #else
-    if (unlikely(Py_EnterRecursiveCall(" while calling a Python object")))
-        return NULL;
-    #endif
-    result = cfunc(self, arg);
-    Py_LeaveRecursiveCall();
-    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
-        PyErr_SetString(
-            PyExc_SystemError,
-            "NULL result without error in PyObject_Call");
-    }
-    return result;
-}
-#endif
-
-/* PyObjectFastCall */
-#if PY_VERSION_HEX < 0x03090000 || CYTHON_COMPILING_IN_LIMITED_API
-static PyObject* __Pyx_PyObject_FastCall_fallback(PyObject *func, PyObject **args, size_t nargs, PyObject *kwargs) {
-    PyObject *argstuple;
-    PyObject *result = 0;
-    size_t i;
-    argstuple = PyTuple_New((Py_ssize_t)nargs);
-    if (unlikely(!argstuple)) return NULL;
-    for (i = 0; i < nargs; i++) {
-        Py_INCREF(args[i]);
-        if (__Pyx_PyTuple_SET_ITEM(argstuple, (Py_ssize_t)i, args[i]) < 0) goto bad;
-    }
-    result = __Pyx_PyObject_Call(func, argstuple, kwargs);
-  bad:
-    Py_DECREF(argstuple);
-    return result;
-}
-#endif
-static CYTHON_INLINE PyObject* __Pyx_PyObject_FastCallDict(PyObject *func, PyObject **args, size_t _nargs, PyObject *kwargs) {
-    Py_ssize_t nargs = __Pyx_PyVectorcall_NARGS(_nargs);
-#if CYTHON_COMPILING_IN_CPYTHON
-    if (nargs == 0 && kwargs == NULL) {
-        if (__Pyx_CyOrPyCFunction_Check(func) && likely( __Pyx_CyOrPyCFunction_GET_FLAGS(func) & METH_NOARGS))
-            return __Pyx_PyObject_CallMethO(func, NULL);
-    }
-    else if (nargs == 1 && kwargs == NULL) {
-        if (__Pyx_CyOrPyCFunction_Check(func) && likely( __Pyx_CyOrPyCFunction_GET_FLAGS(func) & METH_O))
-            return __Pyx_PyObject_CallMethO(func, args[0]);
-    }
-#endif
-    #if PY_VERSION_HEX < 0x030800B1
-    #if CYTHON_FAST_PYCCALL
-    if (PyCFunction_Check(func)) {
-        if (kwargs) {
-            return _PyCFunction_FastCallDict(func, args, nargs, kwargs);
+    #if CYTHON_USE_PYLONG_INTERNALS
+    if (likely(PyLong_CheckExact(op1))) {
+        int unequal;
+        unsigned long uintval;
+        Py_ssize_t size = __Pyx_PyLong_DigitCount(op1);
+        const digit* digits = __Pyx_PyLong_Digits(op1);
+        if (intval == 0) {
+            return (__Pyx_PyLong_IsZero(op1) != 1);
+        } else if (intval < 0) {
+            if (__Pyx_PyLong_IsNonNeg(op1))
+                return 1;
+            intval = -intval;
         } else {
-            return _PyCFunction_FastCallKeywords(func, args, nargs, NULL);
+            if (__Pyx_PyLong_IsNeg(op1))
+                return 1;
         }
-    }
-    #if PY_VERSION_HEX >= 0x030700A1
-    if (!kwargs && __Pyx_IS_TYPE(func, &PyMethodDescr_Type)) {
-        return _PyMethodDescr_FastCallKeywords(func, args, nargs, NULL);
+        uintval = (unsigned long) intval;
+#if PyLong_SHIFT * 4 < SIZEOF_LONG*8
+        if (uintval >> (PyLong_SHIFT * 4)) {
+            unequal = (size != 5) || (digits[0] != (uintval & (unsigned long) PyLong_MASK))
+                 | (digits[1] != ((uintval >> (1 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK)) | (digits[2] != ((uintval >> (2 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK)) | (digits[3] != ((uintval >> (3 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK)) | (digits[4] != ((uintval >> (4 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK));
+        } else
+#endif
+#if PyLong_SHIFT * 3 < SIZEOF_LONG*8
+        if (uintval >> (PyLong_SHIFT * 3)) {
+            unequal = (size != 4) || (digits[0] != (uintval & (unsigned long) PyLong_MASK))
+                 | (digits[1] != ((uintval >> (1 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK)) | (digits[2] != ((uintval >> (2 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK)) | (digits[3] != ((uintval >> (3 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK));
+        } else
+#endif
+#if PyLong_SHIFT * 2 < SIZEOF_LONG*8
+        if (uintval >> (PyLong_SHIFT * 2)) {
+            unequal = (size != 3) || (digits[0] != (uintval & (unsigned long) PyLong_MASK))
+                 | (digits[1] != ((uintval >> (1 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK)) | (digits[2] != ((uintval >> (2 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK));
+        } else
+#endif
+#if PyLong_SHIFT * 1 < SIZEOF_LONG*8
+        if (uintval >> (PyLong_SHIFT * 1)) {
+            unequal = (size != 2) || (digits[0] != (uintval & (unsigned long) PyLong_MASK))
+                 | (digits[1] != ((uintval >> (1 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK));
+        } else
+#endif
+            unequal = (size != 1) || (((unsigned long) digits[0]) != (uintval & (unsigned long) PyLong_MASK));
+        return (unequal != 0);
     }
     #endif
-    #endif
-    #if CYTHON_FAST_PYCALL
-    if (PyFunction_Check(func)) {
-        return __Pyx_PyFunction_FastCallDict(func, args, nargs, kwargs);
+    if (PyFloat_CheckExact(op1)) {
+        const long b = intval;
+#if CYTHON_COMPILING_IN_LIMITED_API
+        double a = __pyx_PyFloat_AsDouble(op1);
+#else
+        double a = PyFloat_AS_DOUBLE(op1);
+#endif
+        return ((double)a != (double)b);
     }
-    #endif
-    #endif
-    if (kwargs == NULL) {
-        #if CYTHON_VECTORCALL
-        #if PY_VERSION_HEX < 0x03090000
-        vectorcallfunc f = _PyVectorcall_Function(func);
-        #else
-        vectorcallfunc f = PyVectorcall_Function(func);
-        #endif
-        if (f) {
-            return f(func, args, (size_t)nargs, NULL);
-        }
-        #elif defined(__Pyx_CyFunction_USED) && CYTHON_BACKPORT_VECTORCALL
-        if (__Pyx_CyFunction_CheckExact(func)) {
-            __pyx_vectorcallfunc f = __Pyx_CyFunction_func_vectorcall(func);
-            if (f) return f(func, args, (size_t)nargs, NULL);
-        }
-        #endif
-    }
-    if (nargs == 0) {
-        return __Pyx_PyObject_Call(func, __pyx_empty_tuple, kwargs);
-    }
-    #if PY_VERSION_HEX >= 0x03090000 && !CYTHON_COMPILING_IN_LIMITED_API
-    return PyObject_VectorcallDict(func, args, (size_t)nargs, kwargs);
-    #else
-    return __Pyx_PyObject_FastCall_fallback(func, args, (size_t)nargs, kwargs);
-    #endif
-}
-
-/* PyObjectCallOneArg */
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
-    PyObject *args[2] = {NULL, arg};
-    return __Pyx_PyObject_FastCall(func, args+1, 1 | __Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET);
+    return __Pyx_PyObject_IsTrueAndDecref(
+        PyObject_RichCompare(op1, op2, Py_NE));
 }
 
 /* TupleAndListFromArray */
@@ -7302,6 +7753,488 @@ bad:
     Py_XDECREF(local_value);
     Py_XDECREF(local_tb);
     return -1;
+}
+
+/* CIntToDigits */
+static const char DIGIT_PAIRS_10[2*10*10+1] = {
+    "00010203040506070809"
+    "10111213141516171819"
+    "20212223242526272829"
+    "30313233343536373839"
+    "40414243444546474849"
+    "50515253545556575859"
+    "60616263646566676869"
+    "70717273747576777879"
+    "80818283848586878889"
+    "90919293949596979899"
+};
+static const char DIGIT_PAIRS_8[2*8*8+1] = {
+    "0001020304050607"
+    "1011121314151617"
+    "2021222324252627"
+    "3031323334353637"
+    "4041424344454647"
+    "5051525354555657"
+    "6061626364656667"
+    "7071727374757677"
+};
+static const char DIGITS_HEX[2*16+1] = {
+    "0123456789abcdef"
+    "0123456789ABCDEF"
+};
+
+/* BuildPyUnicode */
+static PyObject* __Pyx_PyUnicode_BuildFromAscii(Py_ssize_t ulength, char* chars, int clength,
+                                                int prepend_sign, char padding_char) {
+    PyObject *uval;
+    Py_ssize_t uoffset = ulength - clength;
+#if CYTHON_USE_UNICODE_INTERNALS
+    Py_ssize_t i;
+#if CYTHON_PEP393_ENABLED
+    void *udata;
+    uval = PyUnicode_New(ulength, 127);
+    if (unlikely(!uval)) return NULL;
+    udata = PyUnicode_DATA(uval);
+#else
+    Py_UNICODE *udata;
+    uval = PyUnicode_FromUnicode(NULL, ulength);
+    if (unlikely(!uval)) return NULL;
+    udata = PyUnicode_AS_UNICODE(uval);
+#endif
+    if (uoffset > 0) {
+        i = 0;
+        if (prepend_sign) {
+            __Pyx_PyUnicode_WRITE(PyUnicode_1BYTE_KIND, udata, 0, '-');
+            i++;
+        }
+        for (; i < uoffset; i++) {
+            __Pyx_PyUnicode_WRITE(PyUnicode_1BYTE_KIND, udata, i, padding_char);
+        }
+    }
+    for (i=0; i < clength; i++) {
+        __Pyx_PyUnicode_WRITE(PyUnicode_1BYTE_KIND, udata, uoffset+i, chars[i]);
+    }
+#else
+    {
+        PyObject *sign = NULL, *padding = NULL;
+        uval = NULL;
+        if (uoffset > 0) {
+            prepend_sign = !!prepend_sign;
+            if (uoffset > prepend_sign) {
+                padding = PyUnicode_FromOrdinal(padding_char);
+                if (likely(padding) && uoffset > prepend_sign + 1) {
+                    PyObject *tmp;
+                    PyObject *repeat = PyInt_FromSsize_t(uoffset - prepend_sign);
+                    if (unlikely(!repeat)) goto done_or_error;
+                    tmp = PyNumber_Multiply(padding, repeat);
+                    Py_DECREF(repeat);
+                    Py_DECREF(padding);
+                    padding = tmp;
+                }
+                if (unlikely(!padding)) goto done_or_error;
+            }
+            if (prepend_sign) {
+                sign = PyUnicode_FromOrdinal('-');
+                if (unlikely(!sign)) goto done_or_error;
+            }
+        }
+        uval = PyUnicode_DecodeASCII(chars, clength, NULL);
+        if (likely(uval) && padding) {
+            PyObject *tmp = PyNumber_Add(padding, uval);
+            Py_DECREF(uval);
+            uval = tmp;
+        }
+        if (likely(uval) && sign) {
+            PyObject *tmp = PyNumber_Add(sign, uval);
+            Py_DECREF(uval);
+            uval = tmp;
+        }
+done_or_error:
+        Py_XDECREF(padding);
+        Py_XDECREF(sign);
+    }
+#endif
+    return uval;
+}
+
+/* CIntToPyUnicode */
+static CYTHON_INLINE PyObject* __Pyx_PyUnicode_From_size_t(size_t value, Py_ssize_t width, char padding_char, char format_char) {
+    char digits[sizeof(size_t)*3+2];
+    char *dpos, *end = digits + sizeof(size_t)*3+2;
+    const char *hex_digits = DIGITS_HEX;
+    Py_ssize_t length, ulength;
+    int prepend_sign, last_one_off;
+    size_t remaining;
+#ifdef __Pyx_HAS_GCC_DIAGNOSTIC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
+    const size_t neg_one = (size_t) -1, const_zero = (size_t) 0;
+#ifdef __Pyx_HAS_GCC_DIAGNOSTIC
+#pragma GCC diagnostic pop
+#endif
+    const int is_unsigned = neg_one > const_zero;
+    if (format_char == 'X') {
+        hex_digits += 16;
+        format_char = 'x';
+    }
+    remaining = value;
+    last_one_off = 0;
+    dpos = end;
+    do {
+        int digit_pos;
+        switch (format_char) {
+        case 'o':
+            digit_pos = abs((int)(remaining % (8*8)));
+            remaining = (size_t) (remaining / (8*8));
+            dpos -= 2;
+            memcpy(dpos, DIGIT_PAIRS_8 + digit_pos * 2, 2);
+            last_one_off = (digit_pos < 8);
+            break;
+        case 'd':
+            digit_pos = abs((int)(remaining % (10*10)));
+            remaining = (size_t) (remaining / (10*10));
+            dpos -= 2;
+            memcpy(dpos, DIGIT_PAIRS_10 + digit_pos * 2, 2);
+            last_one_off = (digit_pos < 10);
+            break;
+        case 'x':
+            *(--dpos) = hex_digits[abs((int)(remaining % 16))];
+            remaining = (size_t) (remaining / 16);
+            break;
+        default:
+            assert(0);
+            break;
+        }
+    } while (unlikely(remaining != 0));
+    assert(!last_one_off || *dpos == '0');
+    dpos += last_one_off;
+    length = end - dpos;
+    ulength = length;
+    prepend_sign = 0;
+    if (!is_unsigned && value <= neg_one) {
+        if (padding_char == ' ' || width <= length + 1) {
+            *(--dpos) = '-';
+            ++length;
+        } else {
+            prepend_sign = 1;
+        }
+        ++ulength;
+    }
+    if (width > ulength) {
+        ulength = width;
+    }
+    if (ulength == 1) {
+        return PyUnicode_FromOrdinal(*dpos);
+    }
+    return __Pyx_PyUnicode_BuildFromAscii(ulength, dpos, (int) length, prepend_sign, padding_char);
+}
+
+/* JoinPyUnicode */
+static PyObject* __Pyx_PyUnicode_Join(PyObject* value_tuple, Py_ssize_t value_count, Py_ssize_t result_ulength,
+                                      Py_UCS4 max_char) {
+#if CYTHON_USE_UNICODE_INTERNALS && CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+    PyObject *result_uval;
+    int result_ukind, kind_shift;
+    Py_ssize_t i, char_pos;
+    void *result_udata;
+    CYTHON_MAYBE_UNUSED_VAR(max_char);
+#if CYTHON_PEP393_ENABLED
+    result_uval = PyUnicode_New(result_ulength, max_char);
+    if (unlikely(!result_uval)) return NULL;
+    result_ukind = (max_char <= 255) ? PyUnicode_1BYTE_KIND : (max_char <= 65535) ? PyUnicode_2BYTE_KIND : PyUnicode_4BYTE_KIND;
+    kind_shift = (result_ukind == PyUnicode_4BYTE_KIND) ? 2 : result_ukind - 1;
+    result_udata = PyUnicode_DATA(result_uval);
+#else
+    result_uval = PyUnicode_FromUnicode(NULL, result_ulength);
+    if (unlikely(!result_uval)) return NULL;
+    result_ukind = sizeof(Py_UNICODE);
+    kind_shift = (result_ukind == 4) ? 2 : result_ukind - 1;
+    result_udata = PyUnicode_AS_UNICODE(result_uval);
+#endif
+    assert(kind_shift == 2 || kind_shift == 1 || kind_shift == 0);
+    char_pos = 0;
+    for (i=0; i < value_count; i++) {
+        int ukind;
+        Py_ssize_t ulength;
+        void *udata;
+        PyObject *uval = PyTuple_GET_ITEM(value_tuple, i);
+        if (unlikely(__Pyx_PyUnicode_READY(uval)))
+            goto bad;
+        ulength = __Pyx_PyUnicode_GET_LENGTH(uval);
+        if (unlikely(!ulength))
+            continue;
+        if (unlikely((PY_SSIZE_T_MAX >> kind_shift) - ulength < char_pos))
+            goto overflow;
+        ukind = __Pyx_PyUnicode_KIND(uval);
+        udata = __Pyx_PyUnicode_DATA(uval);
+        if (!CYTHON_PEP393_ENABLED || ukind == result_ukind) {
+            memcpy((char *)result_udata + (char_pos << kind_shift), udata, (size_t) (ulength << kind_shift));
+        } else {
+            #if PY_VERSION_HEX >= 0x030d0000
+            if (unlikely(PyUnicode_CopyCharacters(result_uval, char_pos, uval, 0, ulength) < 0)) goto bad;
+            #elif CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX >= 0x030300F0 || defined(_PyUnicode_FastCopyCharacters)
+            _PyUnicode_FastCopyCharacters(result_uval, char_pos, uval, 0, ulength);
+            #else
+            Py_ssize_t j;
+            for (j=0; j < ulength; j++) {
+                Py_UCS4 uchar = __Pyx_PyUnicode_READ(ukind, udata, j);
+                __Pyx_PyUnicode_WRITE(result_ukind, result_udata, char_pos+j, uchar);
+            }
+            #endif
+        }
+        char_pos += ulength;
+    }
+    return result_uval;
+overflow:
+    PyErr_SetString(PyExc_OverflowError, "join() result is too long for a Python string");
+bad:
+    Py_DECREF(result_uval);
+    return NULL;
+#else
+    CYTHON_UNUSED_VAR(max_char);
+    CYTHON_UNUSED_VAR(result_ulength);
+    CYTHON_UNUSED_VAR(value_count);
+    return PyUnicode_Join(__pyx_empty_unicode, value_tuple);
+#endif
+}
+
+/* PyFunctionFastCall */
+#if CYTHON_FAST_PYCALL && !CYTHON_VECTORCALL
+static PyObject* __Pyx_PyFunction_FastCallNoKw(PyCodeObject *co, PyObject **args, Py_ssize_t na,
+                                               PyObject *globals) {
+    PyFrameObject *f;
+    PyThreadState *tstate = __Pyx_PyThreadState_Current;
+    PyObject **fastlocals;
+    Py_ssize_t i;
+    PyObject *result;
+    assert(globals != NULL);
+    /* XXX Perhaps we should create a specialized
+       PyFrame_New() that doesn't take locals, but does
+       take builtins without sanity checking them.
+       */
+    assert(tstate != NULL);
+    f = PyFrame_New(tstate, co, globals, NULL);
+    if (f == NULL) {
+        return NULL;
+    }
+    fastlocals = __Pyx_PyFrame_GetLocalsplus(f);
+    for (i = 0; i < na; i++) {
+        Py_INCREF(*args);
+        fastlocals[i] = *args++;
+    }
+    result = PyEval_EvalFrameEx(f,0);
+    ++tstate->recursion_depth;
+    Py_DECREF(f);
+    --tstate->recursion_depth;
+    return result;
+}
+static PyObject *__Pyx_PyFunction_FastCallDict(PyObject *func, PyObject **args, Py_ssize_t nargs, PyObject *kwargs) {
+    PyCodeObject *co = (PyCodeObject *)PyFunction_GET_CODE(func);
+    PyObject *globals = PyFunction_GET_GLOBALS(func);
+    PyObject *argdefs = PyFunction_GET_DEFAULTS(func);
+    PyObject *closure;
+#if PY_MAJOR_VERSION >= 3
+    PyObject *kwdefs;
+#endif
+    PyObject *kwtuple, **k;
+    PyObject **d;
+    Py_ssize_t nd;
+    Py_ssize_t nk;
+    PyObject *result;
+    assert(kwargs == NULL || PyDict_Check(kwargs));
+    nk = kwargs ? PyDict_Size(kwargs) : 0;
+    #if PY_MAJOR_VERSION < 3
+    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object"))) {
+        return NULL;
+    }
+    #else
+    if (unlikely(Py_EnterRecursiveCall(" while calling a Python object"))) {
+        return NULL;
+    }
+    #endif
+    if (
+#if PY_MAJOR_VERSION >= 3
+            co->co_kwonlyargcount == 0 &&
+#endif
+            likely(kwargs == NULL || nk == 0) &&
+            co->co_flags == (CO_OPTIMIZED | CO_NEWLOCALS | CO_NOFREE)) {
+        if (argdefs == NULL && co->co_argcount == nargs) {
+            result = __Pyx_PyFunction_FastCallNoKw(co, args, nargs, globals);
+            goto done;
+        }
+        else if (nargs == 0 && argdefs != NULL
+                 && co->co_argcount == Py_SIZE(argdefs)) {
+            /* function called with no arguments, but all parameters have
+               a default value: use default values as arguments .*/
+            args = &PyTuple_GET_ITEM(argdefs, 0);
+            result =__Pyx_PyFunction_FastCallNoKw(co, args, Py_SIZE(argdefs), globals);
+            goto done;
+        }
+    }
+    if (kwargs != NULL) {
+        Py_ssize_t pos, i;
+        kwtuple = PyTuple_New(2 * nk);
+        if (kwtuple == NULL) {
+            result = NULL;
+            goto done;
+        }
+        k = &PyTuple_GET_ITEM(kwtuple, 0);
+        pos = i = 0;
+        while (PyDict_Next(kwargs, &pos, &k[i], &k[i+1])) {
+            Py_INCREF(k[i]);
+            Py_INCREF(k[i+1]);
+            i += 2;
+        }
+        nk = i / 2;
+    }
+    else {
+        kwtuple = NULL;
+        k = NULL;
+    }
+    closure = PyFunction_GET_CLOSURE(func);
+#if PY_MAJOR_VERSION >= 3
+    kwdefs = PyFunction_GET_KW_DEFAULTS(func);
+#endif
+    if (argdefs != NULL) {
+        d = &PyTuple_GET_ITEM(argdefs, 0);
+        nd = Py_SIZE(argdefs);
+    }
+    else {
+        d = NULL;
+        nd = 0;
+    }
+#if PY_MAJOR_VERSION >= 3
+    result = PyEval_EvalCodeEx((PyObject*)co, globals, (PyObject *)NULL,
+                               args, (int)nargs,
+                               k, (int)nk,
+                               d, (int)nd, kwdefs, closure);
+#else
+    result = PyEval_EvalCodeEx(co, globals, (PyObject *)NULL,
+                               args, (int)nargs,
+                               k, (int)nk,
+                               d, (int)nd, closure);
+#endif
+    Py_XDECREF(kwtuple);
+done:
+    Py_LeaveRecursiveCall();
+    return result;
+}
+#endif
+
+/* PyObjectCallMethO */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg) {
+    PyObject *self, *result;
+    PyCFunction cfunc;
+    cfunc = __Pyx_CyOrPyCFunction_GET_FUNCTION(func);
+    self = __Pyx_CyOrPyCFunction_GET_SELF(func);
+    #if PY_MAJOR_VERSION < 3
+    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
+        return NULL;
+    #else
+    if (unlikely(Py_EnterRecursiveCall(" while calling a Python object")))
+        return NULL;
+    #endif
+    result = cfunc(self, arg);
+    Py_LeaveRecursiveCall();
+    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "NULL result without error in PyObject_Call");
+    }
+    return result;
+}
+#endif
+
+/* PyObjectFastCall */
+#if PY_VERSION_HEX < 0x03090000 || CYTHON_COMPILING_IN_LIMITED_API
+static PyObject* __Pyx_PyObject_FastCall_fallback(PyObject *func, PyObject **args, size_t nargs, PyObject *kwargs) {
+    PyObject *argstuple;
+    PyObject *result = 0;
+    size_t i;
+    argstuple = PyTuple_New((Py_ssize_t)nargs);
+    if (unlikely(!argstuple)) return NULL;
+    for (i = 0; i < nargs; i++) {
+        Py_INCREF(args[i]);
+        if (__Pyx_PyTuple_SET_ITEM(argstuple, (Py_ssize_t)i, args[i]) < 0) goto bad;
+    }
+    result = __Pyx_PyObject_Call(func, argstuple, kwargs);
+  bad:
+    Py_DECREF(argstuple);
+    return result;
+}
+#endif
+static CYTHON_INLINE PyObject* __Pyx_PyObject_FastCallDict(PyObject *func, PyObject **args, size_t _nargs, PyObject *kwargs) {
+    Py_ssize_t nargs = __Pyx_PyVectorcall_NARGS(_nargs);
+#if CYTHON_COMPILING_IN_CPYTHON
+    if (nargs == 0 && kwargs == NULL) {
+        if (__Pyx_CyOrPyCFunction_Check(func) && likely( __Pyx_CyOrPyCFunction_GET_FLAGS(func) & METH_NOARGS))
+            return __Pyx_PyObject_CallMethO(func, NULL);
+    }
+    else if (nargs == 1 && kwargs == NULL) {
+        if (__Pyx_CyOrPyCFunction_Check(func) && likely( __Pyx_CyOrPyCFunction_GET_FLAGS(func) & METH_O))
+            return __Pyx_PyObject_CallMethO(func, args[0]);
+    }
+#endif
+    #if PY_VERSION_HEX < 0x030800B1
+    #if CYTHON_FAST_PYCCALL
+    if (PyCFunction_Check(func)) {
+        if (kwargs) {
+            return _PyCFunction_FastCallDict(func, args, nargs, kwargs);
+        } else {
+            return _PyCFunction_FastCallKeywords(func, args, nargs, NULL);
+        }
+    }
+    #if PY_VERSION_HEX >= 0x030700A1
+    if (!kwargs && __Pyx_IS_TYPE(func, &PyMethodDescr_Type)) {
+        return _PyMethodDescr_FastCallKeywords(func, args, nargs, NULL);
+    }
+    #endif
+    #endif
+    #if CYTHON_FAST_PYCALL
+    if (PyFunction_Check(func)) {
+        return __Pyx_PyFunction_FastCallDict(func, args, nargs, kwargs);
+    }
+    #endif
+    #endif
+    if (kwargs == NULL) {
+        #if CYTHON_VECTORCALL
+        #if PY_VERSION_HEX < 0x03090000
+        vectorcallfunc f = _PyVectorcall_Function(func);
+        #else
+        vectorcallfunc f = PyVectorcall_Function(func);
+        #endif
+        if (f) {
+            return f(func, args, (size_t)nargs, NULL);
+        }
+        #elif defined(__Pyx_CyFunction_USED) && CYTHON_BACKPORT_VECTORCALL
+        if (__Pyx_CyFunction_CheckExact(func)) {
+            __pyx_vectorcallfunc f = __Pyx_CyFunction_func_vectorcall(func);
+            if (f) return f(func, args, (size_t)nargs, NULL);
+        }
+        #endif
+    }
+    if (nargs == 0) {
+        return __Pyx_PyObject_Call(func, __pyx_empty_tuple, kwargs);
+    }
+    #if PY_VERSION_HEX >= 0x03090000 && !CYTHON_COMPILING_IN_LIMITED_API
+    return PyObject_VectorcallDict(func, args, (size_t)nargs, kwargs);
+    #else
+    return __Pyx_PyObject_FastCall_fallback(func, args, (size_t)nargs, kwargs);
+    #endif
+}
+
+/* PyObjectCallOneArg */
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
+    PyObject *args[2] = {NULL, arg};
+    return __Pyx_PyObject_FastCall(func, args+1, 1 | __Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET);
+}
+
+/* PyObjectCallNoArg */
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallNoArg(PyObject *func) {
+    PyObject *arg[2] = {NULL, NULL};
+    return __Pyx_PyObject_FastCall(func, arg + 1, 0 | __Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET);
 }
 
 /* FixUpExtensionType */
@@ -9608,7 +10541,7 @@ __Pyx_PyType_GetName(PyTypeObject* tp)
     if (unlikely(name == NULL) || unlikely(!PyUnicode_Check(name))) {
         PyErr_Clear();
         Py_XDECREF(name);
-        name = __Pyx_NewRef(__pyx_n_s__9);
+        name = __Pyx_NewRef(__pyx_n_s__12);
     }
     return name;
 }

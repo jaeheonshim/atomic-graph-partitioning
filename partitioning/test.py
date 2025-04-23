@@ -1,6 +1,7 @@
-import partitioner
+from wrapper import partitioner
+from partitioning import part_metis_unweighted
+import networkx as nx
 
-# Create a simple graph (adjacency list)
 graph = [
     [1, 2, 5],          # Node 0 connected to 1, 2, 5
     [0, 2, 3, 4],       # Node 1 connected to 0, 2, 3, 4
@@ -12,9 +13,17 @@ graph = [
     [3, 4, 6]           # Node 7 connected to 3, 4, 6
 ]
 
-# 0 1 2 3 4 5 6 7 8 9
-# 1 2 0 2 3 0 1 3 1 2
+G = nx.Graph()
 
-# Partition graph into 2 parts
-partitions = partitioner.part_graph_kway_extended(graph, 2)
-print(partitions)  # Something like [0, 0, 1, 1]
+G.add_nodes_from(range(len(graph)))
+for u, neighbors in enumerate(graph):
+    for v in neighbors:
+        G.add_edge(u, v)
+
+G = nx.Graph(G)
+
+original_partitions = part_metis_unweighted(None, G, 2, distance=1)
+wrapper_partitions = partitioner.part_graph_kway_extended(graph, 2, distance=1)
+
+print(original_partitions)
+print(wrapper_partitions)
