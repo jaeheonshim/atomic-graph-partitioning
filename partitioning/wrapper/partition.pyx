@@ -308,13 +308,6 @@ def part_graph_kway_extended(list adjlist, int nparts, list nodew=None, list nod
         ncon, tpwgts_ptr, ubvec_val, distance
     )
 
-    for i in range(result.size()):
-        print(f"Partition {i}:")
-        for j in range(result[i].size()):
-            print(f"  {result[i][j]}", end=" ")
-        print()
-    
-    # Free allocated memory
     free(xadj)
     free(adjncy)
     if adjwgt != NULL:
