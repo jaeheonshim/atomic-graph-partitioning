@@ -1,5 +1,5 @@
-cimport metis
-from metis cimport idx_t, real_t, METIS_OK, METIS_ERROR_INPUT, METIS_ERROR_MEMORY, METIS_ERROR
+from . cimport metis
+from .metis cimport idx_t, real_t, METIS_OK, METIS_ERROR_INPUT, METIS_ERROR_MEMORY, METIS_ERROR
 from libc.stdlib cimport malloc, free
 from libcpp.vector cimport vector
 from libcpp.deque cimport deque
@@ -14,7 +14,8 @@ cdef struct METIS_Graph:
     idx_t* adjwgt
 
 
-cdef METIS_Graph _c_adjlist_to_metis(
+cdef int _c_adjlist_to_metis(
+    METIS_Graph* graph,
     idx_t* xadj_input,
     idx_t* adjncy_input,
     size_t n,
@@ -24,16 +25,14 @@ cdef METIS_Graph _c_adjlist_to_metis(
     idx_t* adjwgt_input=NULL,
     idx_t ncon=1
 ):
-    cdef METIS_Graph graph
-
     cdef idx_t* xadj = <idx_t*>malloc((n+1) * sizeof(idx_t))
     if xadj == NULL:
-        raise MemoryError("Failed to allocate memory for xadj")
+        return -1
     
     cdef idx_t* adjncy = <idx_t*>malloc(m * sizeof(idx_t))
     if adjncy == NULL:
         free(xadj)
-        raise MemoryError("Failed to allocate memory for adjncy")
+        return -1
 
     cdef size_t i
     for i in range(n+1):
@@ -51,7 +50,7 @@ cdef METIS_Graph _c_adjlist_to_metis(
         if vwgt == NULL:
             free(xadj)
             free(adjncy)
-            raise MemoryError("Failed to allocate memory for vwgt")
+            return -1
             
         for i in range(n * ncon):
             vwgt[i] = vwgt_input[i]
@@ -63,7 +62,7 @@ cdef METIS_Graph _c_adjlist_to_metis(
             free(adjncy)
             if vwgt != NULL:
                 free(vwgt)
-            raise MemoryError("Failed to allocate memory for vsize")
+            return -1
             
         for i in range(n):
             vsize[i] = vsize_input[i]
@@ -77,7 +76,7 @@ cdef METIS_Graph _c_adjlist_to_metis(
                 free(vwgt)
             if vsize != NULL:
                 free(vsize)
-            raise MemoryError("Failed to allocate memory for adjwgt")
+            return -1
             
         for i in range(m):
             adjwgt[i] = adjwgt_input[i]
@@ -90,8 +89,7 @@ cdef METIS_Graph _c_adjlist_to_metis(
     graph.vsize = vsize
     graph.adjwgt = adjwgt
 
-    return graph
-
+    return 0
 
 cdef void _c_descendants_at_distance_multisource(
     int nparts,
@@ -108,6 +106,7 @@ cdef void _c_descendants_at_distance_multisource(
     cdef idx_t node
     cdef int d
     cdef vector[idx_t] current
+    cdef idx_t child
     
     for i in range(nparts):
         current = vector[idx_t]()
@@ -139,7 +138,7 @@ cdef void _c_descendants_at_distance_multisource(
 
         result.push_back(current)
 
-cdef void _c_part_graph_kway_extended(
+cdef int _c_part_graph_kway_extended(
     vector[vector[idx_t]]& result,
     vector[idx_t]& flat_part_result,
     int nparts,
@@ -156,7 +155,10 @@ cdef void _c_part_graph_kway_extended(
     int distance=0
 ):
     cdef idx_t _edgecut = 0
-    cdef METIS_Graph graph = _c_adjlist_to_metis(xadj_input, adjncy_input, n, m, vwgt_input, vsize_input, adjwgt_input, ncon)
+    cdef METIS_Graph graph
+    if _c_adjlist_to_metis(&graph, xadj_input, adjncy_input, n, m, vwgt_input, vsize_input, adjwgt_input, ncon) < 0:
+        return -1
+    
     cdef idx_t* part = <idx_t*>malloc(n * sizeof(idx_t))
     cdef int initial_part_result = metis.METIS_PartGraphKway(
         &graph.nvtxs,
@@ -329,11 +331,11 @@ def part_graph_kway_extended(list adjlist, int nparts, list nodew=None, list nod
         core_partitions[flat_part_result[i]].add(i)
 
     cdef list extended_partitions = []
-    cdef set group
+    cdef object group  # Python set
     cdef idx_t val
 
     for i in range(result.size()):
-        group = set()
+        group = set()  # Python set
         for j in range(result[i].size()):
             val = result[i][j]
             group.add(val)
