@@ -4,7 +4,10 @@ import random
 import timeit
 import matplotlib.pyplot as plt
 
-from wrapper.partitioner import part_graph_kway_extended as optim_part
+from partitioning.adjlist_partitioner import part_graph_extended
+from metis_wrapper.partition import part_graph_kway_extended as optim_part
+
+random.seed(42)
 
 def networkx_to_metis_adjlist(G):    
     n = G.number_of_nodes()
@@ -25,8 +28,12 @@ def benchmark_optim_one_trial(n, p, parts, dist):
     G = create_random_graph(n, p)
     adjlist = networkx_to_metis_adjlist(G)
     
+    benchmark = part_graph_extended(adjlist, parts, dist)
+    
     start = timeit.default_timer()
-    optim_part(adjlist, parts, distance=dist)
+    result = optim_part(adjlist, parts, distance=dist)
+    print(benchmark[0])
+    print(result)
     stop = timeit.default_timer()
     
     return stop - start
