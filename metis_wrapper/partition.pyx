@@ -155,7 +155,7 @@ def part_graph_kway_extended(list adjlist, int num_partitions, int distance=0):
 
     cdef vector[vector[idx_t]] result
 
-    validate_adjlist(adjlist)
+    # validate_adjlist(adjlist)
 
     for neighbors in adjlist:
         m += len(neighbors)
@@ -177,19 +177,24 @@ def part_graph_kway_extended(list adjlist, int num_partitions, int distance=0):
         if part == NULL:
             raise MemoryError("Failed to allocate part")
 
-        # Set up xadj, adjncy
+        # Precompute xadj
+        cdef idx_t prefix_sum = 0
+        for i in range(nvtxs):
+            xadj[i] = prefix_sum
+            prefix_sum += len(adjlist[i])
+        xadj[nvtxs] = prefix_sum
+
+        # Fill adjncy
         e = 0
         for i in range(nvtxs):
-            xadj[i] = e
-            for j in range(len(adjlist[i])):
-                adjncy[e] = adjlist[i][j]
+            for neighbor in adjlist[i]:
+                adjncy[e] = neighbor
                 e += 1
-        xadj[nvtxs] = e
 
         # METIS calls
         METIS_SetDefaultOptions(options)
-        options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT
         options[METIS_OPTION_NUMBERING] = 0
+        options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT
 
         METIS_PartGraphKway(
             &nvtxs,
@@ -217,10 +222,11 @@ def part_graph_kway_extended(list adjlist, int num_partitions, int distance=0):
             distance
         )
 
-        core_partitions = [set() for _ in range(nparts)]
-        
+        core_partitions = [[] for _ in range(nparts)]
         for i in range(nvtxs):
-            core_partitions[part[i]].add(i)
+            core_partitions[part[i]].append(i)
+
+        core_partitions = [set(part) for part in core_partitions]
 
         return core_partitions
     finally:

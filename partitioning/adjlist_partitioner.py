@@ -35,8 +35,8 @@ def edge_boundary(adj_list, nbunch1):
                 
     return boundary
 
-def part_graph_extended(adj_list, desired_partitions, distance=None):
-    _, parts = metis.part_graph(adj_list, desired_partitions, objtype="cut")
+def part_graph_extended(adj_list, desired_partitions, distance):
+    _, parts = metis.part_graph(adj_list, desired_partitions, objtype="cut", numbering=0)
     partition_map = {node: parts[node] for node in range(len(adj_list))}
     num_partitions = desired_partitions
 

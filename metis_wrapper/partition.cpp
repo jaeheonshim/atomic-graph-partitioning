@@ -4808,31 +4808,31 @@ static PyObject *__pyx_pf_13metis_wrapper_9partition_2part_graph_kway_extended(C
  * 
  *         # METIS calls
  *         METIS_SetDefaultOptions(options)             # <<<<<<<<<<<<<<
- *         options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT
  *         options[METIS_OPTION_NUMBERING] = 0
+ *         options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT
  */
     (void)(METIS_SetDefaultOptions(__pyx_v_options));
 
     /* "metis_wrapper/partition.pyx":191
  *         # METIS calls
  *         METIS_SetDefaultOptions(options)
- *         options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT             # <<<<<<<<<<<<<<
- *         options[METIS_OPTION_NUMBERING] = 0
- * 
- */
-    (__pyx_v_options[__pyx_e_13metis_wrapper_9partition_METIS_OPTION_OBJTYPE]) = __pyx_e_13metis_wrapper_9partition_METIS_OBJTYPE_CUT;
-
-    /* "metis_wrapper/partition.pyx":192
- *         METIS_SetDefaultOptions(options)
- *         options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT
  *         options[METIS_OPTION_NUMBERING] = 0             # <<<<<<<<<<<<<<
+ *         options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT
  * 
- *         METIS_PartGraphKway(
  */
     (__pyx_v_options[__pyx_e_13metis_wrapper_9partition_METIS_OPTION_NUMBERING]) = 0;
 
-    /* "metis_wrapper/partition.pyx":194
+    /* "metis_wrapper/partition.pyx":192
+ *         METIS_SetDefaultOptions(options)
  *         options[METIS_OPTION_NUMBERING] = 0
+ *         options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT             # <<<<<<<<<<<<<<
+ * 
+ *         METIS_PartGraphKway(
+ */
+    (__pyx_v_options[__pyx_e_13metis_wrapper_9partition_METIS_OPTION_OBJTYPE]) = __pyx_e_13metis_wrapper_9partition_METIS_OBJTYPE_CUT;
+
+    /* "metis_wrapper/partition.pyx":194
+ *         options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT
  * 
  *         METIS_PartGraphKway(             # <<<<<<<<<<<<<<
  *             &nvtxs,
