@@ -1,15 +1,12 @@
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 from Cython.Build import cythonize
 import numpy as np
 import os
 
-metis_include_dir = "/usr/local/include"
-metis_lib_dir = "/usr/local/lib"
-
 extensions = [
     Extension(
-        "metis_wrapper.partition",
-        ["metis_wrapper/partition.pyx"],
+        "metis_cython.partition",
+        ["src/metis_cython/partition.pyx"],
         include_dirs=[np.get_include(), "/usr/local/include"],
         library_dirs=["/usr/local/lib"],
         libraries=["metis"],
@@ -20,10 +17,11 @@ extensions = [
 
 setup(
     name="metis_wrapper",
-    packages=["metis_wrapper"],
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
     ext_modules=cythonize(
         extensions,
         language_level='3',
-        include_path=["metis_wrapper"]
+        include_path=["src/metis_cython"]
     ),
 )
