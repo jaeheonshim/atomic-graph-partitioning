@@ -8,7 +8,7 @@
             "-std=c++17"
         ],
         "include_dirs": [
-            "/opt/anaconda3/envs/orb-partitioning/lib/python3.10/site-packages/numpy/core/include",
+            "/storage/home/hcoda1/7/jshim87/.conda/envs/graph_partitioning/lib/python3.11/site-packages/numpy/core/include",
             "/usr/local/include"
         ],
         "language": "c++",

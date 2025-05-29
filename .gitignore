@@ -1,6 +1,8 @@
 __pycache__
 *.pyc
+*.so
 slurm-*.out
 *.out
 wandb/
+submitit_logs/
 .env
