@@ -2,6 +2,7 @@ import unittest
 import random
 from tests import util
 from main.partitioner.metis_cython import MetisCythonPartitioner
+from main.partitioner.metis_wrapper import MetisPartitioner
 
 # (n, p, num_partitions, mp)
 parameters = [
@@ -78,10 +79,13 @@ class BasePartitionerTest:
 
                 core, extended = partitioner.partition(None, adjlist, num_partitions, mp)
                 
-                correct_extension = [set(util.descendants_at_distance_multisource(adjlist, part, distance=mp)) for part in core]
+                correct_extension = [set(util.descendants_at_distance_multisource(adjlist, part, distance=mp)).union(part) for part in core]
                 
                 for a, b in zip(extended, correct_extension):
                     self.assertSetEqual(a, b)
                     
 class TestMetisCythonPartitioner(BasePartitionerTest, unittest.TestCase):
     partitioner_class = MetisCythonPartitioner
+    
+class TestMetisWrapperPartitioner(BasePartitionerTest, unittest.TestCase):
+    partitioner_class = MetisPartitioner
