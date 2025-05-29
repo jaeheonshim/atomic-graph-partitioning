@@ -33,3 +33,26 @@ def erdos_renyi_adjlist(n, p):
                 adjlist[j].append(i)
                 
     return adjlist
+
+import numpy as np
+from ase import Atoms
+
+def random_atoms_from_adjlist(
+        adjlist,
+        box_size=10.0,
+        element_pool=("C",),
+        seed=None,
+        pbc=True):
+    if seed is not None:
+        np.random.seed(seed)
+
+    n_atoms = len(adjlist)
+    symbols  = np.random.choice(element_pool, size=n_atoms)
+    positions = np.random.random((n_atoms, 3)) * box_size
+
+    atoms = Atoms(symbols=symbols,
+                  positions=positions,
+                  cell=[box_size, box_size, box_size],
+                  pbc=pbc)
+
+    return atoms

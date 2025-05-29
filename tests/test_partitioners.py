@@ -3,6 +3,7 @@ import random
 from tests import util
 from main.partitioner.metis_cython import MetisCythonPartitioner
 from main.partitioner.metis_wrapper import MetisPartitioner
+from main.partitioner.grid import GridPartitioner
 
 # (n, p, num_partitions, mp)
 parameters = [
@@ -27,8 +28,9 @@ class BasePartitionerTest:
         for n, p, num_partitions, mp in parameters:
             with self.subTest(f"(n, p, num_partitions, mp) = ({n}, {p}, {num_partitions}, {mp})"):
                 adjlist = util.erdos_renyi_adjlist(n, p)
+                atoms = util.random_atoms_from_adjlist(adjlist)
                 
-                core, extended = partitioner.partition(None, adjlist, num_partitions, mp)
+                core, extended = partitioner.partition(atoms, adjlist, num_partitions, mp)
 
                 for i in range(100):
                     contained = False
@@ -51,8 +53,9 @@ class BasePartitionerTest:
         for n, p, num_partitions, mp in parameters:
             with self.subTest(f"(n, p, num_partitions, mp) = ({n}, {p}, {num_partitions}, {mp})"):
                 adjlist = util.erdos_renyi_adjlist(n, p)
+                atoms = util.random_atoms_from_adjlist(adjlist)
 
-                core, extended = partitioner.partition(None, adjlist, num_partitions, mp)
+                core, extended = partitioner.partition(atoms, adjlist, num_partitions, mp)
 
                 for i in range(100):
                     contained = False
@@ -76,8 +79,9 @@ class BasePartitionerTest:
         for n, p, num_partitions, mp in parameters:
             with self.subTest(f"(n, p, num_partitions, mp) = ({n}, {p}, {num_partitions}, {mp})"):
                 adjlist = util.erdos_renyi_adjlist(n, p)
+                atoms = util.random_atoms_from_adjlist(adjlist)
 
-                core, extended = partitioner.partition(None, adjlist, num_partitions, mp)
+                core, extended = partitioner.partition(atoms, adjlist, num_partitions, mp)
                 
                 correct_extension = [set(util.descendants_at_distance_multisource(adjlist, part, distance=mp)).union(part) for part in core]
                 
@@ -89,3 +93,6 @@ class TestMetisCythonPartitioner(BasePartitionerTest, unittest.TestCase):
     
 class TestMetisWrapperPartitioner(BasePartitionerTest, unittest.TestCase):
     partitioner_class = MetisPartitioner
+    
+class TestGridPartitioner(BasePartitionerTest, unittest.TestCase):
+    partitioner_class = GridPartitioner
