@@ -1,5 +1,5 @@
-from wrapper.adapter import AtomicModelAdapter
-from wrapper.partitioner import part_graph_extended
+from .adapter import AtomicModelAdapter
+from .partitioner.base import GraphPartitioner
 
 import time
 import gc
@@ -10,8 +10,9 @@ import torch
 from tqdm import tqdm
 
 class AtomicPartitionInference:
-    def __init__(self, model_adapter: AtomicModelAdapter):
+    def __init__(self, model_adapter: AtomicModelAdapter, partitioner: GraphPartitioner):
         self.model_adapter = model_adapter
+        self.partitioner = partitioner
 
     def run(self, 
             atoms: ase.Atoms,
@@ -31,11 +32,11 @@ class AtomicPartitionInference:
 
         ### Data Preparation
         graph = self.model_adapter.atoms_to_graph(atoms)
-        G = self.model_adapter.graph_to_networkx(graph)
+        adjlist = self.model_adapter.graph_to_adjlist(graph)
 
         ### Partitioning
         print("Partitioning graph...")
-        partition_set, extended_partition_set = part_graph_extended(G, desired_partitions, self.model_adapter.num_message_passing)
+        partition_set, extended_partition_set = self.partitioner.partition(atoms, adjlist, desired_partitions, self.model_adapter.num_message_passing)
         num_partitions = len(partition_set)
 
         partitioned_atoms = []

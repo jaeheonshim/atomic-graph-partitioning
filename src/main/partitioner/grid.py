@@ -19,11 +19,14 @@ class GridPartitioner(GraphPartitioner):
         y_bins = np.linspace(y_min, y_max, granularity + 1)
         z_bins = np.linspace(z_min, z_max, granularity + 1)
 
-        for i in range(num_nodes):
-            x_idx = np.mod(np.digitize(scaled[i][0], x_bins) - 1, granularity)
-            y_idx = np.mod(np.digitize(scaled[i][1], y_bins) - 1, granularity)
-            z_idx = np.mod(np.digitize(scaled[i][2], z_bins) - 1, granularity)
-            part_idx = x_idx * granularity**2 + y_idx * granularity + z_idx
+        x_idx = np.mod(np.digitize(scaled[:, 0], x_bins) - 1, granularity)
+        y_idx = np.mod(np.digitize(scaled[:, 1], y_bins) - 1, granularity)
+        z_idx = np.mod(np.digitize(scaled[:, 2], z_bins) - 1, granularity)
+
+        part_indices = x_idx * granularity**2 + y_idx * granularity + z_idx
+
+        partitions = [[] for _ in range(granularity**3)]
+        for i, part_idx in enumerate(part_indices):
             partitions[part_idx].append(i)
 
         core_partitions = [set(p) for p in partitions]

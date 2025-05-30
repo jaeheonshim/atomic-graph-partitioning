@@ -24,7 +24,7 @@ class AtomicModelAdapter(Generic[GraphType]):
         """
         ...
 
-    def graph_to_networkx(self, graph: GraphType) -> nx.Graph:
+    def graph_to_adjlist(self, graph: GraphType) -> list[list[int]]:
         """
         Model specific graph to networkX graph
         """

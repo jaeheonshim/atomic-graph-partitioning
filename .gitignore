@@ -6,3 +6,4 @@ slurm-*.out
 wandb/
 submitit_logs/
 .env
+experiments/**/results

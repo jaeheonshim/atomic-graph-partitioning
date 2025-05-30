@@ -1,4 +1,4 @@
-from wrapper.adapter import AtomicModelAdapter
+from ..adapter import AtomicModelAdapter
 
 import ase
 import networkx as nx

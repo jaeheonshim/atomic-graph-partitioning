@@ -1,4 +1,4 @@
-from wrapper.adapter import AtomicModelAdapter
+from ..adapter import AtomicModelAdapter
 
 from typing import Dict, List, Optional
 
@@ -25,8 +25,17 @@ class MatterSimModelAdapter(AtomicModelAdapter[Data]):
     def atoms_to_graph(self, atoms):
         return self.converter.convert(atoms, None, None, None)
 
-    def graph_to_networkx(self, graph):
-        return to_networkx(graph)
+    def graph_to_adjlist(self, graph):
+        edge_index = graph.edge_index
+
+        num_nodes = graph.num_nodes
+        adjlist = [[] for _ in range(num_nodes)]
+
+        for src, dst in edge_index.t().tolist():
+            adjlist[src].append(dst)
+            adjlist[dst].append(src)
+
+        return adjlist
     
     def init_partition(self, all_atoms, partitions, roots):
         super().init_partition(all_atoms, partitions, roots)

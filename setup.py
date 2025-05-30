@@ -3,12 +3,19 @@ from Cython.Build import cythonize
 import numpy as np
 import os
 
+conda_prefix = os.environ.get("CONDA_PREFIX", "")
+
 extensions = [
     Extension(
         "metis_cython.partition",
         ["src/metis_cython/partition.pyx"],
-        include_dirs=[np.get_include(), "/usr/local/include"],
-        library_dirs=["/usr/local/lib"],
+        include_dirs=[
+            np.get_include(),
+            os.path.join(conda_prefix, "include"),
+        ],
+        library_dirs=[
+            os.path.join(conda_prefix, "lib"),
+        ],
         libraries=["metis"],
         language="c++",
         extra_compile_args=["-std=c++17"],
